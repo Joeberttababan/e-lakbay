@@ -1,0 +1,414 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLockBodyScroll } from '../lib/useLockBodyScroll';
+import { createPortal } from 'react-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../lib/supabaseClient';
+import { useAuth } from './AuthProvider';
+import LocationPickerMap from './LocationPickerMap';
+import type { LocationData } from '../lib/locationTypes';
+import { toast } from 'sonner';
+
+interface ProductUploadModalProps {
+  open: boolean;
+  onClose: () => void;
+  mode?: 'create' | 'edit';
+  productId?: string;
+  initialData?: {
+    name: string;
+    description?: string | null;
+    imageUrl?: string | null;
+    imageUrls?: string[];
+    location?: LocationData;
+  } | null;
+  onSuccess?: (updated?: {
+    name: string;
+    description?: string | null;
+    imageUrl?: string | null;
+    imageUrls?: string[];
+    location?: LocationData;
+  }) => void;
+}
+
+const MAX_IMAGES = 20;
+const STORAGE_BUCKET = 'uploads';
+
+const uploadImages = async (files: File[], folder: string) => {
+  const urls: string[] = [];
+
+  for (let index = 0; index < files.length; index += 1) {
+    const file = files[index];
+    const extension = file.name.split('.').pop() || 'jpg';
+    const fileName = `${folder}/${crypto.randomUUID()}-${index}.${extension}`;
+
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const { data } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(fileName);
+    urls.push(data.publicUrl);
+  }
+
+  return urls;
+};
+
+export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
+  open,
+  onClose,
+  mode = 'create',
+  productId,
+  initialData,
+  onSuccess,
+}) => {
+  // lock background when upload modal is open
+  useLockBodyScroll(open);
+
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [productName, setProductName] = useState('');
+  const [locationData, setLocationData] = useState<LocationData | null>(null);
+  const [description, setDescription] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      setProductName('');
+      setLocationData(null);
+      setDescription('');
+      setFiles([]);
+      setExistingImageUrls([]);
+      setPreviews((prev) => {
+        prev.forEach((url) => URL.revokeObjectURL(url));
+        return [];
+      });
+      setError(null);
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (mode === 'edit' && initialData) {
+      setProductName(initialData.name ?? '');
+      setDescription(initialData.description ?? '');
+      setLocationData(initialData.location ?? null);
+      setFiles([]);
+      setExistingImageUrls(initialData.imageUrls ?? (initialData.imageUrl ? [initialData.imageUrl] : []));
+      setPreviews((prev) => {
+        prev.forEach((url) => URL.revokeObjectURL(url));
+        return [];
+      });
+      setError(null);
+      setIsSubmitting(false);
+    }
+  }, [initialData, mode, open]);
+
+  useEffect(() => {
+    return () => {
+      setPreviews((prev) => {
+        prev.forEach((url) => URL.revokeObjectURL(url));
+        return prev;
+      });
+    };
+  }, []);
+
+  const previewCountLabel = useMemo(() => {
+    if (previews.length === 0) return 'Upload up to 20 images.';
+    return `${previews.length} of ${MAX_IMAGES} selected.`;
+  }, [previews.length]);
+
+  const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(event.target.files ?? []);
+    if (selected.length === 0) return;
+
+    setFiles((prevFiles) => {
+      const remainingSlots = Math.max(MAX_IMAGES - prevFiles.length, 0);
+      const nextFiles = [...prevFiles, ...selected.slice(0, remainingSlots)];
+      return nextFiles;
+    });
+
+    setPreviews((prevPreviews) => {
+      const remainingSlots = Math.max(MAX_IMAGES - prevPreviews.length, 0);
+      const nextPreviews = [
+        ...prevPreviews,
+        ...selected.slice(0, remainingSlots).map((file) => URL.createObjectURL(file)),
+      ];
+      return nextPreviews;
+    });
+
+    event.currentTarget.value = '';
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    if (!productName.trim()) {
+      setError('Product name is required.');
+      return;
+    }
+
+    if (!locationData?.municipality) {
+      setError('Please select a municipality.');
+      return;
+    }
+
+    if (mode === 'create' && files.length === 0) {
+      setError('Please select at least one image.');
+      return;
+    }
+
+    if (mode === 'edit' && existingImageUrls.length === 0 && files.length === 0) {
+      setError('Please keep at least one image.');
+      return;
+    }
+
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      const fallbackImageUrls = existingImageUrls;
+      const imageUrls = files.length > 0
+        ? [...fallbackImageUrls, ...(await uploadImages(files, `products/${productName.trim()}`))]
+        : fallbackImageUrls;
+      // build payload matching the `products` table columns
+      const basePayload = {
+        // no "destination_name" field exists on products – using just product_name below
+        product_name: productName.trim(),
+        description: description.trim() || null,
+        image_url: imageUrls[0] ?? null,
+        user_id: user?.id ?? null,
+        municipality: locationData.municipality,
+        barangay: locationData.barangay,
+        latitude: locationData.lat,
+        longitude: locationData.lng,
+        address: locationData.address,
+      };
+
+      // include images array only when needed
+      const payloadWithArray = {
+        ...basePayload,
+        image_urls: imageUrls,
+      } as typeof basePayload & { image_urls?: string[] };
+
+      if (mode === 'edit') {
+        let { error: updateError } = await supabase
+          .from('products')
+          .update(payloadWithArray)
+          .eq('id', productId ?? '')
+          .eq('user_id', user?.id ?? '');
+
+        if (updateError && updateError.message.includes('image_urls')) {
+          const retry = await supabase
+            .from('products')
+            .update(basePayload)
+            .eq('id', productId ?? '')
+            .eq('user_id', user?.id ?? '');
+          updateError = retry.error ?? null;
+        }
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        const updated = {
+          name: basePayload.product_name,
+          description: basePayload.description,
+          imageUrl: basePayload.image_url,
+          imageUrls,
+          location: {
+            municipality: basePayload.municipality,
+            barangay: basePayload.barangay,
+            lat: basePayload.latitude,
+            lng: basePayload.longitude,
+            address: basePayload.address,
+          } as LocationData,
+        };
+
+        toast.success('Product updated successfully.');
+        await queryClient.invalidateQueries({ queryKey: ['products'] });
+        onSuccess?.(updated);
+        onClose();
+        return;
+      }
+
+      let { error: insertError } = await supabase.from('products').insert(payloadWithArray);
+
+      if (insertError && insertError.message.includes('image_urls')) {
+        const retry = await supabase.from('products').insert(basePayload);
+        insertError = retry.error ?? null;
+      }
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      toast.success('Product uploaded successfully.');
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      onSuccess?.();
+      onClose();
+    } catch (uploadError) {
+      console.error('Product upload error:', uploadError);
+      const message = uploadError instanceof Error ? uploadError.message : 'Upload failed. Please try again.';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!open) return null;
+
+  const modalContent = (
+    <div
+      className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4"
+      role="presentation"
+      onClick={onClose}
+    >
+      <div
+        className="glass-secondary modal-stone-text border border-white/20 rounded-2xl p-3 md:p-6 w-full max-w-4xl h-[85vh] md:h-[80vh] max-h-[85vh] md:max-h-[80vh] overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-upload-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-semibold" id="product-upload-title">Product Upload</h2>
+            <p className="text-sm modal-stone-muted">{mode === 'edit' ? 'Update your uploaded product.' : 'Add new products tied to destinations.'}</p>
+          </div>
+          <button
+            type="button"
+            className="modal-stone-muted hover:opacity-80 text-2xl"
+            onClick={onClose}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+        <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm modal-stone-muted">Product name</label>
+              <span className={`text-xs ${productName.length > 64 ? 'text-red-400' : 'modal-stone-soft'}`}>
+                {productName.length}/64
+              </span>
+            </div>
+            <input
+              type="text"
+              value={productName}
+              onChange={(event) => setProductName(event.target.value.slice(0, 64))}
+              maxLength={64}
+              placeholder="Ilocos Souvenir Bundle"
+              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+            />
+          </div>
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <label className="text-sm modal-stone-muted">Location</label>
+            <LocationPickerMap onLocationConfirmed={setLocationData} initialLocation={locationData} hideIntro defaultPinMapOpen={false} showBarangay={false} />
+            {locationData && (
+              <p className="text-xs modal-stone-muted">
+                Location: {locationData.municipality ?? 'Unknown'}
+              </p>
+            )}
+          </div>
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <div className="flex items-center justify-between">
+              <label className="text-sm modal-stone-muted">Description</label>
+              <span className={`text-xs ${description.length > 2200 ? 'text-red-400' : 'modal-stone-soft'}`}>
+                {description.length}/2,200
+              </span>
+            </div>
+            <textarea
+              rows={3}
+              value={description}
+              onChange={(event) => setDescription(event.target.value.slice(0, 2200))}
+              maxLength={2200}
+              placeholder="Describe the product..."
+              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+            />
+          </div>
+          <div className="flex flex-col gap-2 sm:col-span-2">
+            <label htmlFor="product-upload-images" className="text-sm modal-stone-muted">Image upload</label>
+            <input
+              id="product-upload-images"
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleFilesChange}
+              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text file:mr-3 file:rounded-full file:border-0 file:bg-white/20 file:px-3 file:py-1 file:text-xs file:text-white"
+            />
+            <p className="text-xs modal-stone-muted">{previewCountLabel}</p>
+          </div>
+          {(existingImageUrls.length > 0 || previews.length > 0) && (
+            <div className="sm:col-span-2">
+              <p className="text-xs modal-stone-muted mb-2">Preview</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {existingImageUrls.map((src, index) => (
+                  <div key={`existing-${src}-${index}`} className="relative aspect-square rounded-lg overflow-hidden glass-card">
+                    <img src={src} alt="Existing product" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setExistingImageUrls((prev) => prev.filter((_, i) => i !== index))}
+                      className="absolute top-1 right-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                {previews.map((src, index) => (
+                  <div key={`new-${src}-${index}`} className="relative aspect-square rounded-lg overflow-hidden glass-card">
+                    <img src={src} alt="Selected product" className="h-full w-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFiles((prev) => prev.filter((_, i) => i !== index));
+                        setPreviews((prev) => {
+                          const target = prev[index];
+                          if (target) URL.revokeObjectURL(target);
+                          return prev.filter((_, i) => i !== index);
+                        });
+                      }}
+                      className="absolute top-1 right-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {error && (
+            <div className="sm:col-span-2 text-sm text-red-200 bg-red-500/20 border border-red-200/30 rounded px-3 py-2">
+              {error}
+            </div>
+          )}
+          <div className="sm:col-span-2 flex justify-end gap-3">
+            <button
+              type="button"
+              className="text-sm modal-stone-muted hover:opacity-80"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="rounded-full glass-button px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-60"
+            >
+              {isSubmitting ? (mode === 'edit' ? 'Updating...' : 'Uploading...') : (mode === 'edit' ? 'Update product' : 'Upload product')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  return createPortal(modalContent, document.body);
+};

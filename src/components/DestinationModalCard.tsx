@@ -1,0 +1,537 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import {
+  Cloud,
+  CloudDrizzle,
+  CloudLightning,
+  CloudRain,
+  Pencil,
+  Snowflake,
+  Star,
+  Sun,
+  Trash2,
+  Wind,
+} from 'lucide-react';
+import { Avatar } from './Avatar';
+import { useAuth } from './AuthProvider';
+import { CommentsSlider, CommentsToggleButton } from './CommentsSlider';
+import { DestinationUploadModal } from './DestinationUploadModal';
+import { RouteMapView } from './RouteMapView';
+import { DescriptionContainer } from './destination-modal/DescriptionContainer';
+import { FooterActionsContainer } from './destination-modal/FooterActionsContainer';
+import { ImageGalleryContainer } from './destination-modal/ImageGalleryContainer';
+import { WeatherContainer } from './destination-modal/WeatherContainer';
+import type { LocationData } from '../lib/locationTypes';
+import { preloadImageUrl } from '../lib/imagePreloadCache';
+import { supabase } from '../lib/supabaseClient';
+import {
+  fetchCurrentWeather,
+  fetchCurrentWeatherByMunicipality,
+  type CurrentWeatherData,
+} from '../lib/weather';
+import { toast } from 'sonner';
+
+const preloadedDestinationGalleryKeys = new Set<string>();
+
+interface DestinationModalCardProps {
+  id?: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  imageUrls?: string[];
+  meta?: string;
+  postedBy?: string;
+  postedByImageUrl?: string | null;
+  postedById?: string | null;
+  ratingAvg?: number;
+  ratingCount?: number;
+  onRate?: () => void;
+  onProfileClick?: (profileId: string) => void;
+  location?: LocationData;
+  isCard?: boolean;
+  showEditControl?: boolean;
+}
+
+const formatRating = (ratingAvg?: number, ratingCount?: number) => {
+  if (!ratingAvg || Number.isNaN(ratingAvg)) {
+    return 'No ratings yet';
+  }
+  if (ratingCount && ratingCount > 0) {
+    return `${ratingAvg.toFixed(1)} (${ratingCount})`;
+  }
+  return ratingAvg.toFixed(1);
+};
+
+const getWeatherIcon = (condition?: string) => {
+  const normalized = condition?.toLowerCase() ?? '';
+
+  if (normalized.includes('thunder')) return CloudLightning;
+  if (normalized.includes('drizzle')) return CloudDrizzle;
+  if (normalized.includes('rain')) return CloudRain;
+  if (normalized.includes('snow') || normalized.includes('sleet') || normalized.includes('hail')) return Snowflake;
+  if (normalized.includes('clear') || normalized.includes('sun')) return Sun;
+  if (
+    normalized.includes('mist') ||
+    normalized.includes('fog') ||
+    normalized.includes('haze') ||
+    normalized.includes('smoke') ||
+    normalized.includes('dust')
+  ) {
+    return Wind;
+  }
+
+  return Cloud;
+};
+
+const toTitleCase = (value: string) =>
+  value
+    .trim()
+    .split(/\s+/)
+    .map((word) => (word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word))
+    .join(' ');
+
+export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
+  id,
+  title,
+  description,
+  imageUrl,
+  imageUrls,
+  meta,
+  postedBy = 'Tourism Office',
+  postedByImageUrl,
+  postedById,
+  ratingAvg,
+  ratingCount,
+  onRate,
+  onProfileClick,
+  location,
+  isCard = false,
+  showEditControl = false,
+}) => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const canEdit = Boolean(showEditControl && id && user?.id && postedById && user.id === postedById);
+  const formattedTitle = useMemo(() => toTitleCase(title), [title]);
+  const images = useMemo(() => {
+    if (imageUrls && imageUrls.length > 0) {
+      return imageUrls;
+    }
+    return [imageUrl];
+  }, [imageUrl, imageUrls]);
+  const galleryKey = useMemo(() => images.join('|'), [images]);
+
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [slideState, setSlideState] = useState<{
+    from: number;
+    to: number;
+    direction: 'next' | 'prev';
+  } | null>(null);
+  const [offsetPercent, setOffsetPercent] = useState(0);
+  const [transitionMs, setTransitionMs] = useState(320);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [isGalleryReady, setIsGalleryReady] = useState(false);
+  const [weather, setWeather] = useState<CurrentWeatherData | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [showRoutes, setShowRoutes] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const municipalityName = location?.municipality?.trim() ?? '';
+  const hasLocation = Boolean(location && typeof location.lat === 'number' && typeof location.lng === 'number');
+  const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+
+  useEffect(() => {
+    if (!municipalityName && (!hasLocation || location?.lat == null || location?.lng == null)) {
+      setWeather(null);
+      setWeatherError('Location municipality is unavailable.');
+      setWeatherLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadWeather = async () => {
+      setWeatherLoading(true);
+      setWeatherError(null);
+
+      try {
+        const result = municipalityName
+          ? await fetchCurrentWeatherByMunicipality(municipalityName, 'Ilocos Sur', 'PH', controller.signal)
+          : await fetchCurrentWeather(location?.lat as number, location?.lng as number, controller.signal);
+
+        if (!controller.signal.aborted) {
+          setWeather(result);
+        }
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        const message = error instanceof Error ? error.message : 'Unable to load weather right now.';
+        setWeather(null);
+        setWeatherError(message);
+      } finally {
+        if (!controller.signal.aborted) {
+          setWeatherLoading(false);
+        }
+      }
+    };
+
+    void loadWeather();
+
+    return () => {
+      controller.abort();
+    };
+  }, [hasLocation, location?.lat, location?.lng, municipalityName]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (preloadedDestinationGalleryKeys.has(galleryKey)) {
+      setIsGalleryReady(true);
+      setIsImageLoading(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const preloadAll = async () => {
+      setIsGalleryReady(false);
+      setIsImageLoading(true);
+      await Promise.all(images.map((src) => preloadImageUrl(src)));
+
+      if (cancelled) return;
+      preloadedDestinationGalleryKeys.add(galleryKey);
+      setIsGalleryReady(true);
+      setIsImageLoading(false);
+    };
+
+    void preloadAll();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [galleryKey]);
+
+  useEffect(() => {
+    if (images.length === 0) return;
+
+    const current = images[activeIndex];
+    const next = images[(activeIndex + 1) % images.length];
+    const prev = images[(activeIndex - 1 + images.length) % images.length];
+
+    void preloadImageUrl(current);
+    void preloadImageUrl(next);
+    void preloadImageUrl(prev);
+  }, [activeIndex, galleryKey]);
+
+  useEffect(() => {
+    setActiveIndex(0);
+    setSlideState(null);
+    setOffsetPercent(0);
+    setIsTransitioning(false);
+  }, [galleryKey]);
+
+  const runSlide = async (direction: 'next' | 'prev') => {
+    if (isTransitioning || images.length <= 1 || !isGalleryReady) return;
+
+    const targetIndex =
+      direction === 'next'
+        ? (activeIndex + 1) % images.length
+        : (activeIndex - 1 + images.length) % images.length;
+
+    const duration = 320;
+    const startOffset = direction === 'next' ? 0 : 50;
+    const endOffset = direction === 'next' ? 50 : 0;
+
+    setTransitionMs(duration);
+    setSlideState({
+      from: direction === 'next' ? activeIndex : targetIndex,
+      to: direction === 'next' ? targetIndex : activeIndex,
+      direction,
+    });
+    setOffsetPercent(startOffset);
+    setIsTransitioning(false);
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setIsTransitioning(true);
+        setOffsetPercent(endOffset);
+      });
+    });
+  };
+
+  const handlePrev = () => {
+    void runSlide('prev');
+  };
+
+  const handleNext = () => {
+    void runSlide('next');
+  };
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    swipeStartRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      time: performance.now(),
+    };
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start || images.length <= 1 || isTransitioning || isImageLoading || !isGalleryReady) return;
+
+    const deltaX = event.clientX - start.x;
+    const deltaY = event.clientY - start.y;
+    const elapsed = performance.now() - start.time;
+
+    if (elapsed > 800) return;
+    if (Math.abs(deltaX) < 50) return;
+    if (Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+
+    if (deltaX > 0) {
+      handlePrev();
+    } else {
+      handleNext();
+    }
+  };
+
+  const todayLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }),
+    [],
+  );
+
+  const WeatherIcon = getWeatherIcon(weather?.condition);
+  const weatherAddressLabel = useMemo(() => {
+    const formattedBarangay = location?.barangay ? toTitleCase(location.barangay) : '';
+    const formattedMunicipality = location?.municipality ? toTitleCase(location.municipality) : '';
+
+    const addressParts = [formattedBarangay, formattedMunicipality].filter(Boolean);
+
+    if (addressParts.length > 0) {
+      return addressParts.join(', ');
+    }
+
+    return formattedTitle;
+  }, [formattedTitle, location?.barangay, location?.municipality]);
+
+  const headerSection = (
+    <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+        <Avatar
+          name={postedBy}
+          imageUrl={postedByImageUrl}
+          sizeClassName="h-6 w-6 sm:h-7 sm:w-7"
+          onClick={postedById && onProfileClick ? () => onProfileClick(postedById) : undefined}
+        />
+        {postedById && onProfileClick ? (
+          <button
+            type="button"
+            onClick={() => onProfileClick(postedById)}
+            className="hover:underline hover:underline-offset-4"
+          >
+            {postedBy}
+          </button>
+        ) : (
+          <span>{postedBy}</span>
+        )}
+      </div>
+      {canEdit ? (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setIsEditOpen(true)}
+            className="rounded-full bg-white/10 border border-white/20 p-2 text-white hover:bg-white/20 transition-colors"
+            aria-label="Open edit mode"
+          >
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            disabled={isDeleting}
+            onClick={async () => {
+              if (!id || !user?.id || isDeleting) return;
+              const confirmed = window.confirm('Delete this destination permanently?');
+              if (!confirmed) return;
+
+              setIsDeleting(true);
+              try {
+                const { error } = await supabase
+                  .from('destinations')
+                  .delete()
+                  .eq('id', id)
+                  .eq('user_id', user.id);
+
+                if (error) throw error;
+
+                await Promise.all([
+                  queryClient.invalidateQueries({ queryKey: ['destinations'] }),
+                  queryClient.invalidateQueries({ queryKey: ['destinations', 'top'] }),
+                ]);
+                toast.success('Destination deleted.');
+              } catch (error) {
+                const message = error instanceof Error ? error.message : 'Failed to delete destination.';
+                toast.error(message);
+              } finally {
+                setIsDeleting(false);
+              }
+            }}
+            className="rounded-full bg-white/10 border border-white/20 p-2 text-white hover:bg-white/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            aria-label="Delete destination"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        meta && <span className="text-[10px] sm:text-xs text-white/50">{meta}</span>
+      )}
+    </header>
+  );
+
+  const mediaAndWeatherSection = (
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,0.6fr)] gap-5">
+      <ImageGalleryContainer
+        images={images}
+        title={formattedTitle}
+        activeIndex={activeIndex}
+        slideState={slideState}
+        offsetPercent={offsetPercent}
+        transitionMs={transitionMs}
+        isTransitioning={isTransitioning}
+        isImageLoading={isImageLoading}
+        isGalleryReady={isGalleryReady}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={() => {
+          swipeStartRef.current = null;
+        }}
+        onTransitionEnd={(event) => {
+          if (event.target !== event.currentTarget) return;
+          if (!slideState) return;
+          setActiveIndex(slideState.direction === 'next' ? slideState.to : slideState.from);
+          setSlideState(null);
+          setIsTransitioning(false);
+          setIsImageLoading(false);
+          setOffsetPercent(0);
+        }}
+      />
+
+      <WeatherContainer
+        detailsOpen={detailsOpen}
+        locationLabel={weatherAddressLabel}
+        todayLabel={todayLabel}
+        weatherLoading={weatherLoading}
+        weather={weather}
+        WeatherIcon={WeatherIcon}
+      />
+    </div>
+  );
+
+  const mobileDetailsToggle = !detailsOpen && (
+    <div className="flex items-center justify-between lg:hidden">
+      <div className="flex items-center gap-2 text-xs text-yellow-300">
+        <Star className="h-3.5 w-3.5 text-yellow-300" fill="currentColor" />
+        <span className="modal-stone-muted">{formatRating(ratingAvg, ratingCount)}</span>
+      </div>
+      <button
+        type="button"
+        onClick={() => setDetailsOpen(true)}
+        className="text-xs font-semibold modal-stone-muted underline underline-offset-4 hover:opacity-80"
+      >
+        See more
+      </button>
+    </div>
+  );
+
+  const descriptionSection = (
+    <DescriptionContainer
+      detailsOpen={detailsOpen}
+      title={formattedTitle}
+      ratingLabel={formatRating(ratingAvg, ratingCount)}
+      description={description}
+    />
+  );
+
+  const footerActions = (
+    <FooterActionsContainer
+      onRate={onRate}
+      hasLocation={Boolean(location)}
+      onViewRoutes={() => {
+        if (!location) return;
+        setShowRoutes(true);
+      }}
+      detailsOpen={detailsOpen}
+      onCloseDetails={() => setDetailsOpen(false)}
+    />
+  );
+
+  return (
+    <article className={`relative glass-secondary modal-stone-text border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col w-full overflow-hidden ${isCard ? 'h-[60vh]' : 'h-[65vh] sm:h-[55vh] md:h-[75vh] lg:h-[65vh]'}`}>
+      {/* Comments toggle button on right edge */}
+      {id && !showComments && (
+        <CommentsToggleButton
+          onClick={() => setShowComments(true)}
+          commentCount={ratingCount}
+        />
+      )}
+      <div
+        className="flex-1 min-h-0 overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y flex flex-col gap-2"
+        onWheelCapture={(event) => {
+          event.stopPropagation();
+        }}
+        onTouchMoveCapture={(event) => {
+          event.stopPropagation();
+        }}
+      >
+        {headerSection}
+        {mediaAndWeatherSection}
+        {mobileDetailsToggle}
+        {descriptionSection}
+      </div>
+      {footerActions}
+      {showRoutes && location && (
+        <RouteMapView
+          destination={location}
+          destinationName={title}
+          onClose={() => setShowRoutes(false)}
+        />
+      )}
+
+      {canEdit && (
+        <DestinationUploadModal
+          open={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          mode="edit"
+          destinationId={id}
+          initialData={{
+            name: title,
+            description,
+            imageUrl,
+            imageUrls,
+            location,
+          }}
+        />
+      )}
+
+      {/* Comments Slider - inside modal */}
+      {id && (
+        <CommentsSlider
+          open={showComments}
+          onClose={() => setShowComments(false)}
+          itemId={id}
+          itemType="destination"
+          itemName={formattedTitle}
+          onProfileClick={onProfileClick}
+        />
+      )}
+    </article>
+  );
+};

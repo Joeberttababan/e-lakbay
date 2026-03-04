@@ -1,0 +1,30 @@
+import React from 'react';
+import { Star } from 'lucide-react';
+
+interface DescriptionContainerProps {
+  detailsOpen: boolean;
+  title: string;
+  ratingLabel: string;
+  description: string;
+}
+
+export const DescriptionContainer: React.FC<DescriptionContainerProps> = ({
+  detailsOpen,
+  title,
+  ratingLabel,
+  description,
+}) => (
+  <div className={`flex flex-col gap-2 ${detailsOpen ? 'block' : 'hidden'} lg:block`}>
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3 pb-2">
+      <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-yellow-300">
+        <Star className="h-4 w-4 text-yellow-300" fill="currentColor" />
+        <span className="modal-stone-muted">{ratingLabel}</span>
+      </div>
+    </div>
+
+    <div className="border-t border-white/10 max-h-28 sm:max-h-36 pt-2 pr-1 overflow-y-auto">
+      <p className="text-xs sm:text-sm modal-stone-muted leading-relaxed">{description}</p>
+    </div>
+  </div>
+);

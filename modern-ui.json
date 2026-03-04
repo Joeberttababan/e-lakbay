@@ -1,0 +1,30 @@
+{
+  "style": "default",
+  "path": "src/components/modern-ui",
+  "theme": "default",
+  "typescript": true,
+  "tailwind": true,
+  "framework": "vite",
+  "components": [
+    {
+      "name": "button",
+      "version": "latest",
+      "installedAt": "2026-02-02T18:45:22.606Z"
+    },
+    {
+      "name": "sonner",
+      "version": "latest",
+      "installedAt": "2026-02-11T15:28:01.975Z"
+    },
+    {
+      "name": "breadcrumb",
+      "version": "latest",
+      "installedAt": "2026-02-11T15:36:29.604Z"
+    }
+  ],
+  "aliases": {
+    "cn": "@/lib/utils",
+    "hook": "@/hooks"
+  },
+  "tailwindVersion": "v4"
+}
