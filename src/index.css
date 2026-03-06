@@ -185,7 +185,7 @@
 :root {
   --radius: 0.625rem;
   --background: oklch(29.033% 0.00003 271.152);
-  --foreground: #0C24D0;
+  --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -230,8 +230,7 @@
   }
   body {
     @apply text-foreground;
-    background-color:#F2F4FC;
-    /**background-image: url('./assets/abstract-studio-dark.webp');**/
+    background-image: url('./assets/abstract-studio-dark.webp');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
