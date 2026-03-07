@@ -338,7 +338,7 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
               multiple
               accept="image/*"
               onChange={handleFilesChange}
-              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text file:mr-3 file:rounded-full file:border-0 file:bg-white/20 file:px-3 file:py-1 file:text-xs file:text-white"
+              className="rounded-lg bg-black/5 border border-black/15 px-4 py-2 text-sm modal-stone-text file:mr-3 file:rounded-full file:border-0 file:bg-black/10 file:px-3 file:py-1 file:text-xs file:text-black"
             />
             <p className="text-xs modal-stone-soft">{previewCountLabel}</p>
           </div>

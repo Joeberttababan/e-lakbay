@@ -185,8 +185,8 @@ export const HomepageProductSection: React.FC<HomepageProductSectionProps> = ({
     <>
       <section id="products" className="mt-12">
         <div className="text-center max-w-2xl mx-auto">
-          <h1 className="text-3xl md:text-5xl font-extrabold">Local Products</h1>
-          <p className="mt-3 text-sm text-muted-foreground">
+          <h1 className="text-3xl md:text-5xl font-extrabold text-black">Local Products</h1>
+          <p className="mt-3 text-sm text-black">
             "Experience the best of Ilocos Sur's products"
           </p>
         </div>
@@ -239,12 +239,12 @@ export const HomepageProductSection: React.FC<HomepageProductSectionProps> = ({
             ))
           )}
         </div>
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-1 text-sm md:text-base text-muted-foreground">
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-1 text-sm md:text-base text-black">
           <p>Want to see more products?</p>
           <button
             type="button"
             onClick={onViewProducts}
-            className="text-foreground underline underline-offset-4 hover:text-muted-foreground"
+            className="text-black underline underline-offset-4 hover:text-black/70"
           >
             Click here to view more
           </button>

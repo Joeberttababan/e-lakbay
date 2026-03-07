@@ -323,7 +323,7 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
 
   const headerSection = (
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-      <div className="flex items-center gap-2 text-xs sm:text-sm text-white/70">
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-black/70">
         <Avatar
           name={postedBy}
           imageUrl={postedByImageUrl}
@@ -347,7 +347,7 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
           <button
             type="button"
             onClick={() => setIsEditOpen(true)}
-            className="rounded-full bg-white/10 border border-white/20 p-2 text-white hover:bg-white/20 transition-colors"
+            className="rounded-full bg-black/10 border border-black/20 p-2 text-black hover:bg-black/20 transition-colors"
             aria-label="Open edit mode"
           >
             <Pencil className="h-4 w-4" />
@@ -382,7 +382,7 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
                 setIsDeleting(false);
               }
             }}
-            className="rounded-full bg-white/10 border border-white/20 p-2 text-white hover:bg-white/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="rounded-full bg-black/10 border border-black/20 p-2 text-black hover:bg-black/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Delete destination"
           >
             <Trash2 className="h-4 w-4" />

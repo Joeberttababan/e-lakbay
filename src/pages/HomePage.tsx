@@ -23,7 +23,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onViewDestinations, onViewPr
   return (
     <>
       <HomepageHeroSection />
-      <main className=" text-foreground px-4 sm:px-6 lg:px-10 pb-12">
+      <main className=" text-black px-4 sm:px-6 lg:px-10 pb-12">
         <div className="max-w-7xl mx-auto">
           <motion.div {...sectionMotion}>
             <HomepageMunicipalitiesSection onSelectProfile={onViewProfile} />

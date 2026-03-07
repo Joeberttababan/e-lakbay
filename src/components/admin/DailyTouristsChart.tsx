@@ -93,10 +93,10 @@ const DailyTouristsChart: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
         <div>
           <h3 className="text-lg font-semibold">Daily New Tourists</h3>
-          <p className="text-sm text-white/60">
+          <p className="text-sm text-black/60">
             Based on tourist account creation
             {!isPending && (
-              <span className="ml-2 text-white/40">
+              <span className="ml-2 text-black/40">
                 ({totalTourists} total in period)
               </span>
             )}
@@ -119,7 +119,7 @@ const DailyTouristsChart: React.FC = () => {
               className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
                 dateFilter === f.value
                   ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                  : 'text-white/50 hover:text-white hover:bg-white/5'
+                  : 'text-black/50 hover:text-white hover:bg-white/5'
               }`}
             >
               {f.label}
@@ -134,14 +134,14 @@ const DailyTouristsChart: React.FC = () => {
           <Skeleton className="h-full w-full rounded-lg" />
         </div>
       ) : chartData.length === 0 ? (
-        <div className="h-64 flex items-center justify-center text-white/60">
+        <div className="h-64 flex items-center justify-center text-black/60">
           No tourist data available for the selected period.
         </div>
       ) : (
         <div className="mt-4 relative min-h-60">
           {/* Y-axis labels */}
           <div
-            className="absolute left-0 top-0 w-8 flex flex-col justify-between text-[10px] text-white/40 h-50"
+            className="absolute left-0 top-0 w-8 flex flex-col justify-between text-[10px] text-black/80 h-50"
           >
             <span>{maxCount}</span>
             <span>{Math.round(maxCount / 2)}</span>
@@ -176,7 +176,7 @@ const DailyTouristsChart: React.FC = () => {
                     <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 border border-white/10 px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
                       <span className="font-medium">{day.count}</span> tourist
                       {day.count !== 1 ? 's' : ''}{' '}
-                      <span className="text-white/50">· {formatDateLabel(day.date)}</span>
+                      <span className="text-black/80">· {formatDateLabel(day.date)}</span>
                     </div>
                   </motion.div>
                 </div>
@@ -193,7 +193,7 @@ const DailyTouristsChart: React.FC = () => {
               return (
                 <div key={day.date} className="flex-1 min-w-1.5 max-w-10 text-center">
                   {showLabel && (
-                    <span className="text-[8px] sm:text-[10px] text-white/40 whitespace-nowrap">
+                    <span className="text-[8px] sm:text-[10px] text-black/60 whitespace-nowrap">
                       {formatDateLabel(day.date)}
                     </span>
                   )}

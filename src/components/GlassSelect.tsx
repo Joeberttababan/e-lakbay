@@ -54,26 +54,26 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({
         type="button"
         onClick={toggleOpen}
         disabled={disabled}
-        className="w-full rounded-lg bg-white/20 backdrop-blur-md border border-white/15 px-4 py-2 text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-white/30 disabled:opacity-50"
+        className="w-full rounded-lg bg-[#EEEEEE] backdrop-blur-md border border-[#1A1A1A]/15 px-4 py-2 text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-[#0D9488]/30 disabled:opacity-50 text-black"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
-        <span className={selectedLabel ? 'text-white' : 'text-white/60'}>{displayLabel}</span>
-        <span className="text-white/60">▾</span>
+        <span className={selectedLabel ? 'text-black' : 'text-black/60'}>{displayLabel}</span>
+        <span className="text-black/60">▾</span>
       </button>
       {open && (
-        <div className="absolute z-30 mt-1 w-full rounded-lg border border-white/15 bg-black/70 backdrop-blur-xl shadow-lg max-h-56 overflow-y-auto text-sm">
+        <div className="absolute z-30 mt-1 w-full rounded-lg border border-[#1A1A1A]/15 bg-[#FFFFFF]/95 backdrop-blur-xl shadow-lg max-h-56 overflow-y-auto text-sm">
           {loading ? (
-            <div className="px-4 py-2 text-white/70">{loadingText}</div>
+            <div className="px-4 py-2 text-black/70">{loadingText}</div>
           ) : showEmpty ? (
-            <div className="px-4 py-2 text-white/10">{emptyText}</div>
+            <div className="px-4 py-2 text-black/10">{emptyText}</div>
           ) : (
             options.map((opt) => (
               <button
                 type="button"
                 key={opt.value}
-                className={`w-full text-left px-4 py-2 hover:bg-white/20 transition-colors ${
-                  value === opt.value ? 'bg-white/20 text-white' : 'text-white'
+                className={`w-full text-left px-4 py-2 hover:bg-[#1A1A1A]/10 transition-colors ${
+                  value === opt.value ? 'bg-black/10 text-black' : 'text-black'
                 }`}
                 onClick={() => {
                   onChange(opt.value);

@@ -203,7 +203,7 @@ export const DashboardAnalyticsSection: React.FC<DashboardAnalyticsSectionProps>
       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-8">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl sm:text-4xl font-semibold">Welcome back, {displayName}</h1>
-          <p className="text-muted-foreground">Here is a quick overview of your travel analytics.</p>
+          <p className="text-black">Here is a quick overview of your travel analytics.</p>
         </div>
 
         <div className="md:ml-auto md:self-start flex justify-end">
@@ -241,7 +241,7 @@ export const DashboardAnalyticsSection: React.FC<DashboardAnalyticsSectionProps>
               className="rounded-2xl glass-card-nonmodal p-4"
               {...getItemMotion(index)}
             >
-              <p className="text-sm text-muted-foreground">{stat.label}</p>
+              <p className="text-sm text-black/70">{stat.label}</p>
               <div className="mt-2 flex items-end justify-between">
                 {isLoading ? <Skeleton className="h-8 w-24 rounded-md" /> : <span className="text-2xl font-semibold">{stat.value}</span>}
               </div>
@@ -257,12 +257,12 @@ export const DashboardAnalyticsSection: React.FC<DashboardAnalyticsSectionProps>
           {...getPanelMotion(0.08)}
         >
           <h2 className="text-lg font-semibold mb-4">Traffic & Acquisition</h2>
-          <h3 className="text-sm text-muted-foreground mb-4">Most Visits (Top 10 + Others)</h3>
+          <h3 className="text-sm text-black/70 mb-4">Most Visits (Top 10 + Others)</h3>
           <div>
             {isLoading ? (
               <ul className="space-y-3">{renderListSkeleton(8)}</ul>
             ) : topLandingPages.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No traffic data available yet.</p>
+              <p className="text-sm text-black/70">No traffic data available yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height={Math.max(280, topLandingPages.length * 32)}>
                 <BarChart
@@ -351,12 +351,12 @@ export const DashboardAnalyticsSection: React.FC<DashboardAnalyticsSectionProps>
                     <div className="flex items-center gap-2">
                       <span className="capitalize">{item.name}</span>
                       {(item as TopSearchedItem).type && (
-                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/10 text-muted-foreground capitalize">
+                        <span className="text-xs px-1.5 py-0.5 rounded-full bg-white/10 text-black/70 capitalize">
                           {(item as TopSearchedItem).type}
                         </span>
                       )}
                     </div>
-                    <span className="text-muted-foreground">{item.count}</span>
+                    <span className="text-black/70">{item.count}</span>
                   </li>
                 ))}
               </ul>
@@ -419,7 +419,7 @@ export const DashboardAnalyticsSection: React.FC<DashboardAnalyticsSectionProps>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-5">
               <div>
                 <h3 id="custom-date-range-title" className="text-xl font-semibold">Custom Date Range</h3>
-                <p className="text-sm text-muted-foreground">Pick a start and end date.</p>
+                <p className="text-sm text-black/70">Pick a start and end date.</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => setIsCustomModalOpen(false)}>
                 Close

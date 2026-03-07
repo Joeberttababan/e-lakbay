@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Button } from './modern-ui/button';
 import { cn } from '../lib/utils';
 import { useModal } from './ModalContext';
-import logoWhite from '../assets/e-lakbay_logo(white).svg';
+import logoWhite from '../assets/e-lakbay_Logo.svg';
 import type { Profile } from './AuthProvider';
 
 interface NavBarProps {
@@ -83,10 +83,10 @@ export const NavBar: React.FC<NavBarProps> = ({
   const isDestinationsActive = location.pathname === '/destinations' || (isHome && activeHash === 'top-destinations');
   const isProductsActive = location.pathname === '/products' || (isHome && activeHash === 'products');
   const isMunicipalitiesActive = isHome && activeHash === 'municipalities';
-  const activeLinkClass = 'font-semibold underline underline-offset-4 text-foreground';
+  const activeLinkClass = 'font-semibold underline underline-offset-4 text-black';
 
   return (
-    <nav className="absolute top-0 left-0 z-[60] w-full flex items-center justify-between px-4 py-1 md:px-8 md:py-4 text-foreground">
+    <nav className="absolute top-0 left-0 z-[60] w-full flex items-center justify-between px-4 py-1 md:px-8 md:py-4 text-black">
       {/* Logo */}
       <button type="button" className="select-none" onClick={onHome} aria-label="Go to homepage">
         <img 
@@ -100,21 +100,21 @@ export const NavBar: React.FC<NavBarProps> = ({
         <button
           type="button"
           onClick={() => handleSectionJump('top-destinations')}
-          className={cn('cursor-pointer hover:text-muted-foreground transition-colors', isDestinationsActive && activeLinkClass)}
+          className={cn('cursor-pointer hover:text-black/70 transition-colors', isDestinationsActive && activeLinkClass)}
         >
           Destinations
         </button>
         <button
           type="button"
           onClick={() => handleSectionJump('municipalities')}
-          className={cn('cursor-pointer hover:text-muted-foreground transition-colors', isMunicipalitiesActive && activeLinkClass)}
+          className={cn('cursor-pointer hover:text-black/70 transition-colors', isMunicipalitiesActive && activeLinkClass)}
         >
           Municipalities
         </button>
         <button
           type="button"
           onClick={() => handleSectionJump('products')}
-          className={cn('cursor-pointer hover:text-muted-foreground transition-colors', isProductsActive && activeLinkClass)}
+          className={cn('cursor-pointer hover:text-black/70 transition-colors', isProductsActive && activeLinkClass)}
         >
           Products
         </button>
@@ -122,7 +122,7 @@ export const NavBar: React.FC<NavBarProps> = ({
           <>
             <Button
               variant={active === 'login' ? 'default' : 'outline'}
-              className={cn('rounded-full px-5 py-2 font-medium transition-colors', active === 'login' ? 'shadow-md' : '')}
+              className={cn('text-black rounded-full px-5 py-2 font-medium transition-colors', active === 'login' ? 'shadow-md' : '')}
               onClick={() => handleAuthClick('login')}
             >
               Log In
@@ -147,7 +147,7 @@ export const NavBar: React.FC<NavBarProps> = ({
             </button>
             <Button
               variant="outline"
-              className="rounded-full px-5 py-2 font-medium transition-colors"
+              className="rounded-full px-5 py-2 font-medium transition-colors text-black"
               onClick={() => setIsLogoutOpen(true)}
             >
               Log Out
@@ -159,7 +159,7 @@ export const NavBar: React.FC<NavBarProps> = ({
       <button
         ref={menuButtonRef}
         type="button"
-        className="md:hidden inline-flex items-center justify-center rounded-full p-2 text-foreground/90 hover:text-foreground hover:bg-foreground/10 transition-colors"
+        className="md:hidden inline-flex items-center justify-center rounded-full p-2 text-black/90 hover:text-black hover:bg-black/10 transition-colors"
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -184,11 +184,11 @@ export const NavBar: React.FC<NavBarProps> = ({
           isMenuOpen ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
         )}
       >
-        <div className="relative flex flex-col gap-2 px-4 py-4 text-foreground">
+        <div className="relative flex flex-col gap-2 px-4 py-4 text-black">
           <button
             type="button"
             onClick={() => setIsMenuOpen(false)}
-            className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full p-2 text-foreground/90 hover:text-foreground hover:bg-foreground/10 transition-colors"
+            className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full p-2 text-black/90 hover:text-black hover:bg-black/10 transition-colors"
             aria-label="Close navigation menu"
           >
             <svg
@@ -207,8 +207,8 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('top-destinations')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide hover:text-muted-foreground transition-colors',
-              isDestinationsActive && 'text-foreground font-semibold'
+              'text-left text-sm font-medium tracking-wide hover:text-black/70 transition-colors',
+              isDestinationsActive && 'text-black font-semibold'
             )}
           >
             Destinations
@@ -217,8 +217,8 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('products')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide hover:text-muted-foreground transition-colors',
-              isProductsActive && 'text-foreground font-semibold'
+              'text-left text-sm font-medium tracking-wide hover:text-black/70 transition-colors',
+              isProductsActive && 'text-black font-semibold'
             )}
           >
             Products
@@ -227,8 +227,8 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('municipalities')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide hover:text-muted-foreground transition-colors',
-              isMunicipalitiesActive && 'text-foreground font-semibold'
+              'text-left text-sm font-medium tracking-wide hover:text-black/70 transition-colors',
+              isMunicipalitiesActive && 'text-black font-semibold'
             )}
           >
             Municipalities
@@ -264,7 +264,7 @@ export const NavBar: React.FC<NavBarProps> = ({
               </button>
               <Button
                 variant="outline"
-                className="rounded-full px-4 py-2 text-sm font-medium transition-colors"
+                className="rounded-full px-4 py-2 text-sm font-medium transition-colors text-black"
                 onClick={() => {
                   setIsLogoutOpen(true);
                   setIsMenuOpen(false);
@@ -284,7 +284,7 @@ export const NavBar: React.FC<NavBarProps> = ({
           onClick={() => setIsLogoutOpen(false)}
         >
           <div
-            className="glass-secondary rounded-2xl p-6 w-full max-w-sm text-white max-h-[85vh] md:max-h-none overflow-y-auto hide-scrollbar"
+            className="glass-secondary rounded-2xl p-6 w-full max-w-sm text-black max-h-[85vh] md:max-h-none overflow-y-auto hide-scrollbar"
             role="dialog"
             aria-modal="true"
             aria-labelledby="logout-title"
@@ -293,13 +293,13 @@ export const NavBar: React.FC<NavBarProps> = ({
             <h3 className="text-lg font-semibold" id="logout-title">
               Log out of your account?
             </h3>
-            <p className="text-sm text-white/80 mt-2">
+            <p className="text-sm text-black/80 mt-2">
               You can log back in anytime.
             </p>
             <div className="mt-5 flex items-center justify-end gap-3">
               <button
                 type="button"
-                className="text-sm text-white/80 hover:text-white"
+                className="text-sm text-black/80 hover:text-white"
                 onClick={() => setIsLogoutOpen(false)}
               >
                 Cancel

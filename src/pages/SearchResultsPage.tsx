@@ -346,9 +346,9 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
 
   const handleSelectItem = (item: GroupedSearchItem) => {
     if (item.type === 'destination') {
-      navigate(`/destinations?highlight=${item.id}`);
+      navigate(`/destinations?id=${item.id}`);
     } else {
-      navigate(`/products?highlight=${item.id}`);
+      navigate(`/products?id=${item.id}`);
     }
   };
 
@@ -358,7 +358,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground px-4 sm:px-6 lg:px-10 pt-14 md:pt-24 pb-12">
+    <main className="min-h-screen bg-background text-black px-4 sm:px-6 lg:px-10 pt-14 md:pt-24 pb-12">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <motion.div
@@ -389,11 +389,11 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
           transition={{ duration: 0.4 }}
           className="mb-8"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-black">
             {queryParam ? `Results for "${queryParam}"` : 'Search'}
           </h1>
           {queryParam && !isLoading && (
-            <p className="text-muted-foreground">
+            <p className="text-black/70">
               Found {totalResults} {totalResults === 1 ? 'result' : 'results'}
             </p>
           )}
@@ -427,7 +427,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
         >
           {/* Type filter */}
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Type:</span>
+            <span className="text-sm text-black/70">Type:</span>
             <div className="flex gap-1">
               {(['all', 'destination', 'product'] as FilterType[]).map((type) => (
                 <button
@@ -436,7 +436,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     filterType === type
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      : 'bg-[#E8E8E8] text-black hover:bg-[#E8E8E8]/80'
                   }`}
                 >
                   {type === 'all' ? 'All' : type === 'destination' ? 'Destinations' : 'Products'}
@@ -447,7 +447,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
 
           {/* Rating filter */}
           <div className="flex items-center gap-2">
-            <label htmlFor="min-rating-filter" className="text-sm text-muted-foreground">Min Rating:</label>
+            <label htmlFor="min-rating-filter" className="text-sm text-black/70">Min Rating:</label>
             <select
               id="min-rating-filter"
               value={minRating}
@@ -463,7 +463,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
 
           {/* Sort */}
           <div className="flex items-center gap-2">
-            <label htmlFor="sort-filter" className="text-sm text-muted-foreground">Sort:</label>
+            <label htmlFor="sort-filter" className="text-sm text-[#1A1A1A]/70">Sort:</label>
             <select
               id="sort-filter"
               value={sortOption}
@@ -506,7 +506,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
           >
             <div className="text-6xl mb-4">🔍</div>
             <h2 className="text-xl font-semibold mb-2">No results found</h2>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-[#1A1A1A]/70 mb-4">
               {queryParam
                 ? `We couldn't find anything matching "${queryParam}"`
                 : 'Enter a search term to find destinations and products'}

@@ -33,6 +33,7 @@ export const SearchItemAvatar: React.FC<SearchItemAvatarProps> = ({
     <button
       type="button"
       onClick={onClick}
+      onMouseDown={(event) => event.preventDefault()}
       className={cn(
         'flex items-center gap-3 w-full text-left px-3 py-2 rounded-lg hover:bg-white/10 transition-colors group',
         className

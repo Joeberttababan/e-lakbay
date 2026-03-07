@@ -134,7 +134,7 @@ export const HomepageMunicipalitiesSection: React.FC<HomepageMunicipalitiesSecti
   }
 
   return (
-    <section id="municipalities" className="text-foreground py-5 md:py-10 relative left-1/2 w-screen -ml-[50vw] -mr-[50vw] z-0">
+    <section id="municipalities" className="text-black py-5 md:py-10 relative left-1/2 w-screen -ml-[50vw] -mr-[50vw] z-0">
       <div className="px-3 sm:px-4">
         <div
           ref={scrollerRef}
@@ -160,14 +160,14 @@ export const HomepageMunicipalitiesSection: React.FC<HomepageMunicipalitiesSecti
                   onClick={() => onSelectProfile?.(profile.id)}
                   className="flex flex-col items-center gap-1 text-center w-15 md:w-28"
                 >
-                  <div className="h-20 md:h-28 w-20 md:w-28 rounded-full border border-border bg-background overflow-hidden flex items-center justify-center text-sm md:text-3xl font-extrabold text-foreground">
+                  <div className="h-20 md:h-28 w-20 md:w-28 rounded-full border border-[#E0E0E0] bg-[#FFFFFF] overflow-hidden flex items-center justify-center text-sm md:text-3xl font-extrabold text-black">
                     {profile.imageUrl ? (
                       <img src={profile.imageUrl} alt={profile.name} className="h-full w-full object-cover" />
                     ) : (
                       profile.name.charAt(0).toUpperCase()
                     )}
                   </div>
-                  <span className="text-[10px] sm:text-xs text-muted-foreground leading-tight line-clamp-2 wrap-break-word w-full">
+                  <span className="text-[10px] sm:text-xs text-black/70 leading-tight line-clamp-2 wrap-break-word w-full">
                     {profile.name.toUpperCase()}
                   </span>
                 </button>

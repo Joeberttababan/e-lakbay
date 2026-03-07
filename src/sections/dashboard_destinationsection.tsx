@@ -155,7 +155,7 @@ export const DashboardDestinationSection: React.FC<DashboardDestinationSectionPr
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-2xl font-semibold">Destinations</h2>
-          <p className="text-sm text-muted-foreground">Popular spots you can highlight for visitors.</p>
+          <p className="text-sm text-black/70">Popular spots you can highlight for visitors.</p>
         </div>
       </div>
       <div className="flex flex-col gap-4">

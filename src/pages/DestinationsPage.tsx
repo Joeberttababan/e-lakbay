@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { DestinationTileSkeleton, SkeletonList } from '../components/ui/Skeletons';
 import { DestinationCard } from '../components/DestinationCard';
+import { DestinationModalCard } from '../components/DestinationModalCard';
 import { RatingModal } from '../components/RatingModal';
 import { SearchSuggest } from '../components/SearchSuggest';
 import { useAuth } from '../components/AuthProvider';
@@ -60,6 +61,7 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
   const location = useLocation();
   const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null);
   const {
     data: destinations = [],
     isPending: isDestinationsPending,
@@ -173,6 +175,14 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
   }, [location.search]);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const destinationId = params.get('id');
+    if (destinationId) {
+      setSelectedDestinationId(destinationId);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
     if (isDestinationsPending || isDestinationsFetching) return;
     const query = searchQuery.trim();
     if (!query) return;
@@ -181,7 +191,7 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
   }, [isDestinationsPending, isDestinationsFetching, searchQuery, visibleDestinations.length, user?.id, profile?.role]);
 
   return (
-    <main className="min-h-screen text-foreground pt-12 md:pt-20 pb-12 px-4 sm:px-6 lg:px-10">
+    <main className="min-h-screen text-black pt-12 md:pt-20 pb-12 px-4 sm:px-6 lg:px-10">
       <div className="max-w-7xl mx-auto">
         {onBackHome && (
             <div className="flex justify-start">
@@ -208,8 +218,8 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
         )}
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
-            <h1 className="mt-2 text-3xl sm:text-4xl font-semibold">Destinations</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <h1 className="mt-2 text-3xl sm:text-4xl font-semibold text-black">Destinations</h1>
+            <p className="mt-2 text-sm text-black/70">
               Explore every destination shared by the community.
             </p>
           </div>
@@ -320,6 +330,60 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
           }
         }}
       />
+
+      {selectedDestinationId && destinations.find((d) => d.id === selectedDestinationId) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4"
+          role="presentation"
+          onClick={() => setSelectedDestinationId(null)}
+        >
+          <div
+            className="max-w-5xl w-full max-h-[85vh] md:max-h-none overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="destinations-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {(() => {
+              const destination = destinations.find((d) => d.id === selectedDestinationId);
+              if (destination) {
+                void trackContentView({
+                  contentType: 'destination',
+                  contentId: destination.id,
+                  ownerId: destination.postedById ?? null,
+                  userId: user?.id ?? null,
+                  userRole: profile?.role ?? null,
+                  pagePath: '/destinations',
+                });
+              }
+              return destination ? (
+                <DestinationModalCard
+                  id={destination.id}
+                  title={destination.name}
+                  description={destination.description}
+                  imageUrl={destination.imageUrl}
+                  imageUrls={destination.imageUrls}
+                  postedBy={destination.postedByName}
+                  postedByImageUrl={destination.postedByImageUrl}
+                  postedById={destination.postedById}
+                  ratingAvg={destination.ratingAvg}
+                  ratingCount={destination.ratingCount}
+                  onRate={() => {
+                    if (!user) {
+                      toast.error('Please sign in to rate destinations.');
+                      return;
+                    }
+                    setSelectedDestinationId(null);
+                    setRatingTarget({ id: destination.id, name: destination.name });
+                  }}
+                  onProfileClick={onViewProfile}
+                  location={destination.location}
+                />
+              ) : null;
+            })()}
+          </div>
+        </div>
+      )}
     </main>
   );
 };

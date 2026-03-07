@@ -82,6 +82,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
   const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string } | null>(null);
   const [activeProduct, setActiveProduct] = useState<ActiveProduct | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
 
   const {
     data: products = [],
@@ -191,10 +192,46 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
     setSearchQuery(query);
   }, [location.search]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const productId = params.get('id');
+    if (productId) {
+      setSelectedProductId(productId);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!selectedProductId || products.length === 0) return;
+    const product = products.find((p) => p.id === selectedProductId);
+    if (product) {
+      void trackContentView({
+        contentType: 'product',
+        contentId: product.id,
+        ownerId: product.uploaderId ?? null,
+        userId: user?.id ?? null,
+        userRole: profile?.role ?? null,
+        pagePath: '/products',
+      });
+      setActiveProduct({
+        id: product.id,
+        name: product.name,
+        imageUrl: product.imageUrl ?? '',
+        imageUrls: product.imageUrls,
+        description: product.description,
+        ratingAvg: product.ratingAvg,
+        ratingCount: product.ratingCount,
+        uploaderName: product.uploaderName,
+        uploaderImageUrl: product.uploaderImageUrl,
+        uploaderId: product.uploaderId,
+        location: product.location,
+      });
+    }
+  }, [selectedProductId, products, user?.id, profile?.role]);
+
   // Removed analytics firing on search input change. Analytics now only fires on suggestion click in SearchSuggest.
 
   return (
-    <main className="min-h-screen text-foreground pt-12 md:pt-20 pb-12 px-4 sm:px-6 lg:px-10">
+    <main className="min-h-screen text-black pt-12 md:pt-20 pb-12 px-4 sm:px-6 lg:px-10">
       <div className="max-w-7xl mx-auto">
         {onBackHome && (
           <div className="flex justify-start">
@@ -222,8 +259,8 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
 
         <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div className="max-w-2xl">
-            <h1 className="mt-2 text-3xl sm:text-4xl font-semibold">Products</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <h1 className="mt-2 text-3xl sm:text-4xl font-semibold text-black">Products</h1>
+            <p className="mt-2 text-sm text-black/70">
               Discover locally made products curated for travelers.
             </p>
           </div>

@@ -68,7 +68,7 @@ export const SearchSuggest: React.FC<SearchSuggestProps> = ({
 
   return (
     <div className={cn('relative w-full max-w-xl', className)}>
-      <div className="glass-secondary rounded-2xl sm:rounded-full flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-2 text-white border border-white/10">
+      <div className="glass-secondary rounded-2xl sm:rounded-full flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-2 text-black border border-black/10">
         <input
           type="text"
           value={value}
@@ -78,12 +78,12 @@ export const SearchSuggest: React.FC<SearchSuggestProps> = ({
             window.setTimeout(() => setIsOpen(false), 120);
           }}
           placeholder={placeholder}
-          className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-lg px-2 text-white placeholder:text-white/70"
+          className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-lg px-2 text-[#1A1A1A] placeholder:text-[#1A1A1A]/70"
         />
       </div>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 mt-2 z-50 rounded-2xl glass-secondary border border-white/10 ">
+        <div className="absolute left-0 right-0 mt-2 z-50 rounded-2xl glass-secondary border border-[#1A1A1A]/10 ">
           <ul className="py-2 max-h-64 overflow-auto hide-scrollbar">
             {suggestions.map((item) => (
               <li key={item.id}>
@@ -204,7 +204,7 @@ export const GroupedSearchSuggest: React.FC<GroupedSearchSuggestProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className={cn('relative w-full max-w-xl', className)}>
-      <div className="glass-secondary rounded-full flex items-center gap-3 px-4 sm:px-6 py-1.5 text-foreground border border-white/10">
+      <div className="glass-secondary rounded-full flex items-center gap-3 px-4 sm:px-6 py-1.5 text-[#1A1A1A] border border-white/10">
         {/* Search icon */}
         <svg
           className="h-5 w-5 text-white/60 shrink-0"
@@ -229,12 +229,12 @@ export const GroupedSearchSuggest: React.FC<GroupedSearchSuggestProps> = ({
             window.setTimeout(() => setIsOpen(false), 150);
           }}
           placeholder={placeholder}
-          className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-lg px-2 text-foreground placeholder:text-muted-foreground"
+          className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-lg px-2 text-[#1A1A1A] placeholder:text-[#1A1A1A]/70"
         />
 
         <button
           type="submit"
-          className="px-4 sm:px-5 py-2 rounded-full bg-hero-gradient text-foreground sm:font-semibold text-xs sm:text-base transition-colors hover:brightness-110 shrink-0"
+          className="px-4 sm:px-5 py-2 rounded-full bg-hero-gradient text-[#FFFFFF] sm:font-semibold text-xs sm:text-base transition-colors hover:brightness-110 shrink-0"
         >
           Search
         </button>

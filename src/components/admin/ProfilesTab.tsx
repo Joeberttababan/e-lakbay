@@ -185,15 +185,15 @@ const ProfilesTab: React.FC = () => {
 
   return (
     <motion.section
-      className="mt-5 rounded-2xl border border-white/10 bg-white/5 p-3 md:p-6"
+      className="mt-5 rounded-2xl border border-[#1A1A1A]/10 bg-[#1A1A1A]/5 p-3 md:p-6"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-lg font-semibold">Profiles</h2>
-          <p className="text-sm text-white/60">Manage user details.</p>
+          <h2 className="text-lg font-semibold text-black">Profiles</h2>
+          <p className="text-sm text-black/60">Manage user details.</p>
         </div>
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <SearchSuggest
@@ -207,12 +207,12 @@ const ProfilesTab: React.FC = () => {
             }))}
             className="w-full max-w-xl [&>div]:px-3 [&>div]:py-2 [&>div]:gap-2 [&_input]:text-sm [&_input]:px-1"
           />
-          <div className="flex items-center justify-between gap-2 text-xs text-white/60 sm:justify-end">
+          <div className="flex items-center justify-between gap-2 text-xs text-black/60 sm:justify-end">
             <span>Rows</span>
             <select
               value={rowsPerPage}
               onChange={(event) => setRowsPerPage(Number(event.target.value))}
-              className="rounded-full border border-white/20 bg-slate-950 px-3 py-1.5 pr-8 text-xs text-white"
+              className="rounded-full border border-black/20 bg-[#EEEEEE] px-3 py-1.5 pr-8 text-xs text-black"
               aria-label="Rows per page"
             >
               {[10, 25, 50, 100].map((size) => (
@@ -232,16 +232,16 @@ const ProfilesTab: React.FC = () => {
       )}
 
       <div className="mt-6">
-        <Table className="text-white">
+        <Table className="text-black">
           <TableHeader>
-            <TableRow className="border-white/10 text-white/50">
-              <TableHead className="text-white/50">Name</TableHead>
-              <TableHead className="text-white/50">Email</TableHead>
-              <TableHead className="text-white/50">Role</TableHead>
-              <TableHead className="text-white/50">Battle Cry</TableHead>
-              <TableHead className="text-right text-white/50">Actions</TableHead>
+            <TableRow className="border-black/10 text-black/50">
+              <TableHead className="text-black/50">Name</TableHead>
+              <TableHead className="text-black/50">Email</TableHead>
+              <TableHead className="text-[#1A1A1A]/50">Role</TableHead>
+              <TableHead className="text-[#1A1A1A]/50">Battle Cry</TableHead>
+              <TableHead className="text-right text-[#1A1A1A]/50">Actions</TableHead>
             </TableRow>
-            <TableRow className="border-white/10">
+            <TableRow className="border-[#1A1A1A]/10">
               <TableHead />
               <TableHead />
               <TableHead>
@@ -284,7 +284,7 @@ const ProfilesTab: React.FC = () => {
           <TableBody>
             {isLoading ? (
               Array.from({ length: rowsPerPage }).map((_, index) => (
-                <TableRow key={`profile-skeleton-${index}`} className="border-white/10 align-top">
+                <TableRow key={`profile-skeleton-${index}`} className="border-[#1A1A1A]/10 align-top">
                   <TableCell className="py-3">
                     <Skeleton className="h-9 w-48 rounded-lg" />
                   </TableCell>
@@ -306,8 +306,8 @@ const ProfilesTab: React.FC = () => {
                 </TableRow>
               ))
             ) : filteredProfiles.length === 0 ? (
-              <TableRow className="border-white/10">
-                <TableCell className="py-6 text-white/60" colSpan={5}>
+              <TableRow className="border-[#1A1A1A]/10">
+                <TableCell className="py-6 text-[#1A1A1A]/60" colSpan={5}>
                   No profiles match your search.
                 </TableCell>
               </TableRow>
@@ -317,7 +317,7 @@ const ProfilesTab: React.FC = () => {
                 const battleCry = profile.battle_cry ?? '';
                 const shouldCollapseBattleCry = battleCry.length > 60;
                 return (
-                  <TableRow key={profile.id} className="border-white/10 align-top">
+                  <TableRow key={profile.id} className="border-[#1A1A1A]/10 align-top">
                     <TableCell>
                       {isEditing ? (
                         <input
@@ -327,14 +327,14 @@ const ProfilesTab: React.FC = () => {
                               prev ? { ...prev, full_name: event.target.value } : prev
                             )
                           }
-                          className="w-48 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
+                          className="w-48 rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
                           aria-label="Full name"
                         />
                       ) : (
                         <span>{profile.full_name || '—'}</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-white/70">{profile.email || '—'}</TableCell>
+                    <TableCell className="text-[#1A1A1A]/70">{profile.email || '—'}</TableCell>
                     <TableCell>
                       {isEditing ? (
                         <select
@@ -346,7 +346,7 @@ const ProfilesTab: React.FC = () => {
                                 : prev
                             )
                           }
-                          className="rounded-lg border border-white/20 bg-slate-950 px-3 py-2 text-sm text-white"
+                          className="rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
                           aria-label="User role"
                         >
                           {ROLE_OPTIONS.map((role) => (
@@ -368,7 +368,7 @@ const ProfilesTab: React.FC = () => {
                               prev ? { ...prev, battle_cry: event.target.value } : prev
                             )
                           }
-                          className="w-56 rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white"
+                          className="w-56 rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
                           aria-label="Battle cry"
                         />
                       ) : (
@@ -377,27 +377,27 @@ const ProfilesTab: React.FC = () => {
                             shouldCollapseBattleCry ? (
                               <Accordion type="single" collapsible>
                                 <AccordionItem value={`battle-${profile.id}`} className="border-none">
-                                  <AccordionTrigger className="group py-0 text-xs text-white/70 hover:no-underline [&>svg]:hidden">
+                                  <AccordionTrigger className="group py-0 text-xs text-[#1A1A1A]/70 hover:no-underline [&>svg]:hidden">
                                     <span className="line-clamp-1 text-left group-data-[state=open]:hidden">
                                       {battleCry}
                                     </span>
-                                    <span className="text-[10px] uppercase tracking-wide text-white/40 group-data-[state=open]:hidden">
+                                    <span className="text-[10px] uppercase tracking-wide text-[#1A1A1A]/40 group-data-[state=open]:hidden">
                                       Expand
                                     </span>
-                                    <span className="text-[10px] uppercase tracking-wide text-white/40 group-data-[state=closed]:hidden">
+                                    <span className="text-[10px] uppercase tracking-wide text-[#1A1A1A]/40 group-data-[state=closed]:hidden">
                                       Collapse
                                     </span>
                                   </AccordionTrigger>
-                                  <AccordionContent className="pt-2 text-xs text-white/70">
+                                  <AccordionContent className="pt-2 text-xs text-[#1A1A1A]/70">
                                     {battleCry}
                                   </AccordionContent>
                                 </AccordionItem>
                               </Accordion>
                             ) : (
-                              <span className="text-white/70">{battleCry}</span>
+                              <span className="text-[#1A1A1A]/70">{battleCry}</span>
                             )
                           ) : (
-                            <span className="text-white/60">—</span>
+                            <span className="text-[#1A1A1A]/60">—</span>
                           )}
                         </div>
                       )}
@@ -416,7 +416,7 @@ const ProfilesTab: React.FC = () => {
                             <button
                               type="button"
                               onClick={cancelEdit}
-                              className="rounded-full px-4 py-2 text-xs font-semibold text-white/70 hover:text-white"
+                              className="rounded-full px-4 py-2 text-xs font-semibold text-[#1A1A1A]/70 hover:text-[#1A1A1A]"
                             >
                               Cancel
                             </button>
@@ -450,7 +450,7 @@ const ProfilesTab: React.FC = () => {
       </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-white/60">
+        <p className="text-xs text-[#1A1A1A]/60">
           Showing {showingFrom}–{showingTo} of {totalCount}
         </p>
         <Pagination className="justify-end sm:justify-center">

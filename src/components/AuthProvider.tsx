@@ -28,18 +28,23 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
 
 const fetchProfile = async (userId: string) => {
-  const { data, error, status } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+  try {
+    const { data, error, status } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
 
-  if (error) {
-    const isNotFound = status === 406 || error.code === 'PGRST116';
-    if (isNotFound) return null;
+    if (error) {
+      const isNotFound = status === 406 || error.code === 'PGRST116';
+      if (isNotFound) return null;
+      throw error;
+    }
+    return data as Profile;
+  } catch (error) {
+    console.error('fetchProfile error:', error);
     throw error;
   }
-  return data as Profile;
 };
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -141,13 +146,17 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
           const sessionUser = session?.user ?? null;
           setUser(sessionUser);
 
-          if (sessionUser) {
+      if (sessionUser) {
             try {
               const profileData = await ensureProfile(sessionUser);
               setProfile(profileData ?? null);
             } catch (error) {
               console.error('Failed to load profile:', error);
-              toast.error('Failed to load your profile.');
+              const errorMsg = error instanceof Error ? error.message : 'Failed to load profile';
+              // Only show error if it's not a network timeout
+              if (!errorMsg.includes('Failed to fetch')) {
+                toast.error('Failed to load your profile.');
+              }
               setProfile(null);
             }
           } else {
@@ -174,7 +183,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
       setProfile(profileData ?? null);
     } catch (error) {
       console.error('Failed to refresh profile:', error);
-      toast.error('Failed to refresh your profile.');
+      // Don't show error toast for refresh failures as it might be transient
+      // The profile will be valid from the auth context
     }
   }, [user]);
 

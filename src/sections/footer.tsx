@@ -1,5 +1,5 @@
 import { Facebook, Instagram, X, Github, Youtube } from "lucide-react";
-import logoWhite from '../assets/e-lakbay_logo(white).svg';
+import logoWhite from '../assets/e-lakbay_Logo.svg';
 
 interface FooterProps {
   onOpenComingSoon?: () => void;
@@ -26,7 +26,7 @@ const socials = [
 export default function Footer({ onOpenComingSoon }: FooterProps) {
 
   return (
-    <footer className="glass-card text-foreground border-t border-border p-4 md:px-8">
+    <footer className="glass-card text-black border-t border-[#E0E0E0] p-4 md:px-8">
 
       {/* ── Upper Row: brand left, nav centered ──
           Stays as a row on tablet (md). Stacks to column only on mobile (sm and below). */}
@@ -47,7 +47,7 @@ export default function Footer({ onOpenComingSoon }: FooterProps) {
         <button
             key={link.label}
             onClick={onOpenComingSoon}
-            className="text-sm text-muted-foreground hover:text-primary transition-colors duration-200 whitespace-nowrap text-underline-offset-5 hover:underline"
+            className="text-sm text-black/70 hover:text-[#0D9488] transition-colors duration-200 whitespace-nowrap text-underline-offset-5 hover:underline"
         >
             {link.label}
         </button>
@@ -62,7 +62,7 @@ export default function Footer({ onOpenComingSoon }: FooterProps) {
           Stays as a row on tablet. Stacks to 1 col only on mobile. */}
       <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
 
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-black/70">
           © 2026 E-Lakbay. All rights reserved.
         </p>
 
@@ -74,7 +74,7 @@ export default function Footer({ onOpenComingSoon }: FooterProps) {
               aria-label={label}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted-foreground hover:text-primary hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
+              className="text-black/70 hover:text-[#0D9488] hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center"
             >
               <Icon size={18} strokeWidth={1.75} />
             </a>
