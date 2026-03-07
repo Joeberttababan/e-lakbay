@@ -165,7 +165,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         <button
           type="button"
           onClick={() => setIsSidebarOpen(true)}
-          className="lg:hidden fixed left-0 top-1/2 -translate-y-1/2 z-50 h-14 w-7 rounded-r-full glass-button border border-border text-foreground hover:text-foreground/80 flex items-center justify-center"
+          className="lg:hidden fixed left-0 top-1/2 -translate-y-1/2 z-50 h-14 w-7 rounded-r-full glass-button border border-border text-black hover:text-black/80 flex items-center justify-center"
           aria-label="Open sidebar"
         >
           <svg
@@ -190,7 +190,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="glass-secondary border border-border rounded-2xl lg:rounded-2xl rounded-l-none p-4 sm:p-5 h-full lg:h-auto lg:sticky top-0 lg:top-24 relative text-foreground">
+        <div className="glass-secondary border border-border rounded-2xl lg:rounded-2xl rounded-l-none p-4 sm:p-5 h-full lg:h-auto lg:sticky top-0 lg:top-24 relative text-black">
         <div ref={profileCardRef} className="mt-2 glass-secondary border border-border rounded-2xl p-5 relative">
           <div className="flex flex-col items-center text-center gap-3 mb-4">
             <button
@@ -204,7 +204,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               {displayAvatar ? (
                 <img src={displayAvatar} alt={displayName} className="h-full w-full object-cover" />
               ) : (
-                <span className="text-sm font-semibold text-muted-foreground">Profile</span>
+                <span className="text-sm font-semibold text-black/70">Profile</span>
               )}
               {isEditing && (
                 <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -236,7 +236,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <button
             type="button"
             onClick={() => setIsEditing((prev) => !prev)}
-            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground"
+            className="absolute top-3 right-3 text-black/70 hover:text-black"
             aria-label="Edit profile"
           >
             ✎
@@ -244,12 +244,12 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           {!isEditing ? (
             <div>
               <p className="text-sm font-semibold">{displayName}</p>
-              <p className="text-xs text-muted-foreground mt-1">{battleCry}</p>
+              <p className="text-xs text-black/70 mt-1">{battleCry}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs text-muted-foreground">Name</label>
+                <label className="text-xs text-black/70">Name</label>
                 <input
                   type="text"
                   placeholder="Enter your name"
@@ -259,7 +259,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 />
               </div>
               <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs text-muted-foreground">Battle cry</label>
+                <label className="text-xs text-black/70">Battle cry</label>
                 <input
                   type="text"
                   placeholder="Enter your battle cry"
@@ -285,26 +285,26 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           )}
         </div>
 
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mt-6">Dashboard</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-black/70 mt-6">Dashboard</p>
         <nav className="mt-4 flex flex-col gap-2 text-sm">
           <button
             type="button"
             onClick={() => handleSectionJump('analytics-overview')}
-            className="text-left text-foreground/80 hover:text-foreground transition-colors"
+            className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors"
           >
             Overview
           </button>
           <button
             type="button"
             onClick={() => handleSectionJump('products')}
-            className="text-left text-foreground/80 hover:text-foreground transition-colors"
+            className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors"
           >
             Products
           </button>
           <button
             type="button"
             onClick={() => handleSectionJump('destinations')}
-            className="text-left text-foreground/80 hover:text-foreground transition-colors"
+            className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors"
           >
             Destinations
           </button>

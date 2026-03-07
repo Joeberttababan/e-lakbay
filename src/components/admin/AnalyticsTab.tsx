@@ -216,7 +216,7 @@ const AnalyticsTab: React.FC = () => {
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold">Municipality Analytics</h2>
-        <p className="text-sm text-white/60 mt-1">
+        <p className="text-sm text-black/60 mt-1">
           Track visits and engagement across all municipality users
         </p>
       </div>
@@ -237,8 +237,8 @@ const AnalyticsTab: React.FC = () => {
             onClick={() => setDateFilter(f.value)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               dateFilter === f.value
-                ? 'bg-white/10 text-white border border-white/20'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
+                ? 'bg-white/10 text-black border border-white/20'
+                : 'text-black/60 hover:text-white hover:bg-white/5'
             }`}
           >
             {f.label}
@@ -262,8 +262,8 @@ const AnalyticsTab: React.FC = () => {
           onClick={() => setContentTab('destinations')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             contentTab === 'destinations'
-              ? 'bg-white/10 text-white border border-white/20'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
+              ? 'bg-white/10 text-black border border-white/20'
+              : 'text-black hover:text-white hover:bg-white/5'
           }`}
         >
           Destinations
@@ -273,8 +273,8 @@ const AnalyticsTab: React.FC = () => {
           onClick={() => setContentTab('products')}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             contentTab === 'products'
-              ? 'bg-white/10 text-white border border-white/20'
-              : 'text-white/60 hover:text-white hover:bg-white/5'
+              ? 'bg-white/10 text-black border border-white/20'
+              : 'text-black hover:text-white hover:bg-white/5'
           }`}
         >
           Products

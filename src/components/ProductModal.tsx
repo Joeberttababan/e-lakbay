@@ -385,12 +385,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                           <button
                             type="button"
                             onClick={() => onProfileClick(localProduct.uploaderId as string)}
-                            className="hover:underline hover:underline-offset-4 text-white"
+                            className="hover:underline hover:underline-offset-4 text-black"
                           >
                             {localProduct.uploaderName}
                           </button>
                         ) : (
-                          <span className="text-white">{localProduct.uploaderName}</span>
+                          <span className="text-black">{localProduct.uploaderName}</span>
                         )}
                       </div>
                     )}
@@ -415,7 +415,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                               location: localProduct.location,
                             });
                           }}
-                          className="rounded-full bg-white/10 border border-white/20 p-2 text-white hover:bg-white/20 transition-colors"
+                          className="rounded-full bg-black/10 border border-black/20 p-2 text-black hover:bg-black/20 transition-colors"
                           aria-label="Open edit mode"
                         >
                           <Pencil className="h-4 w-4" />
@@ -448,7 +448,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                               setIsDeleting(false);
                             }
                           }}
-                          className="rounded-full bg-white/10 border border-white/20 p-2 text-white hover:bg-white/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="rounded-full bg-black/10 border border-black/20 p-2 text-black hover:bg-black/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                           aria-label="Delete product"
                         >
                           <Trash2 className="h-4 w-4" />

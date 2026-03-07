@@ -180,7 +180,7 @@ export const HomepageTopDestinationsSection: React.FC<HomepageTopDestinationsSec
     <section id="top-destinations" className=" relative left-1/2 w-screen -ml-[50vw] md:w-[90vw] md:-ml-[45vw]">
       <div className="text-center max-w-2xl mx-auto">
         <h2 className="text-3xl md:text-5xl font-extrabold">Top Destinations</h2>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mt-3 text-sm text-[#1A1A1A]/70">
           "Discover the heart of Ilocos Sur — where culture, nature, and history meet."
         </p>
       </div>
@@ -240,12 +240,12 @@ export const HomepageTopDestinationsSection: React.FC<HomepageTopDestinationsSec
             )}
           </div>
         </div>
-        <div className=" flex flex-col sm:flex-row items-center justify-center gap-1 text-sm md:text-base text-muted-foreground">
+        <div className=" flex flex-col sm:flex-row items-center justify-center gap-1 text-sm md:text-base text-[#1A1A1A]/70">
           <p>Want to see more destinations?</p>
           <button
             type="button"
             onClick={onViewMore}
-            className="text-foreground underline underline-offset-4 hover:text-muted-foreground"
+            className="text-[#1A1A1A] underline underline-offset-4 hover:text-[#1A1A1A]/70"
           >
             Click here to view more
           </button>

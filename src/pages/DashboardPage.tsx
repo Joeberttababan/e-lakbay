@@ -84,7 +84,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
   };
 
   return (
-    <section ref={sectionRef} className="h-screen text-foreground px-2 overflow-y-hidden overflow-x-visible">
+    <section ref={sectionRef} className="h-screen text-black px-2 overflow-y-hidden overflow-x-visible">
       <div className="max-w-7xl mx-auto h-full pt-12 md:pt-24 pb-12 overflow-x-visible">
         <div className="flex flex-col lg:flex-row gap-8 h-full lg:pl-3 overflow-x-visible">
           <motion.div className="shrink-0" {...sidebarMotion}>

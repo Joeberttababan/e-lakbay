@@ -62,7 +62,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const cardImageClassName = `relative overflow-hidden rounded-bl-xl rounded-tr-xl ${imageClassName ?? 'aspect-square'}`;
 
   const content = (
-    <div className="flex flex-col h-full text-white ">
+    <div className="flex flex-col h-full text-black ">
       <div className={cardImageClassName}>
         <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
         <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs text-white">
@@ -76,7 +76,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       {(shouldShowUploader || shouldShowMeta || shouldShowDescription || onRate || hasLocation) && (
         <div className="px-3 pb-3 pt-2">
           {shouldShowUploader && (
-            <div className="flex items-center gap-2 text-xs text-white/80">
+            <div className="flex items-center gap-2 text-xs text-black/80">
               <Avatar
                 name={uploaderName as string}
                 imageUrl={uploaderImageUrl ?? undefined}
@@ -118,9 +118,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               )}
             </div>
           )}
-          {shouldShowMeta && <p className="text-xs text-white/80">{meta}</p>}
+          {shouldShowMeta && <p className="text-xs text-black/80">{meta}</p>}
           {shouldShowDescription && (
-            <p className="mt-2 text-sm text-white/90 leading-relaxed line-clamp-2">{description}</p>
+            <p className="mt-2 text-sm text-black/90 leading-relaxed line-clamp-2">{description}</p>
           )}
           {(onRate || hasLocation) && (
             <div className="mt-3 flex flex-wrap justify-end gap-2">

@@ -30,7 +30,7 @@ const BreadcrumbLink = React.forwardRef<HTMLAnchorElement, React.AnchorHTMLAttri
     <a
       ref={ref}
       className={cn(
-        'text-inherit text-muted-foreground hover:text-foreground transition-colors inline-flex items-center',
+        'text-[#1A1A1A]/70 hover:text-[#1A1A1A] transition-colors inline-flex items-center',
         className,
       )}
       {...props}
@@ -41,7 +41,7 @@ BreadcrumbLink.displayName = "BreadcrumbLink";
 
 const BreadcrumbSeparator = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
   ({ className, ...props }, ref) => (
-    <span ref={ref} className={cn('mx-1 text-muted-foreground/50', className)} {...props}>
+    <span ref={ref} className={cn('mx-1 text-[#1A1A1A]/50', className)} {...props}>
       <ChevronRight className="h-[1em] w-[1em]" />
     </span>
   ),
@@ -50,14 +50,14 @@ BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
 
 const BreadcrumbPage = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
   ({ className, ...props }, ref) => (
-    <span ref={ref} className={cn('text-inherit font-medium text-foreground', className)} aria-current="page" {...props} />
+    <span ref={ref} className={cn('font-medium text-[#1A1A1A]', className)} aria-current="page" {...props} />
   ),
 );
 BreadcrumbPage.displayName = "BreadcrumbPage";
 
 const BreadcrumbEllipsis = React.forwardRef<HTMLSpanElement, React.HTMLAttributes<HTMLSpanElement>>(
   ({ className, ...props }, ref) => (
-    <span ref={ref} className={cn('text-inherit text-muted-foreground', className)} {...props}>
+    <span ref={ref} className={cn('text-[#1A1A1A]/70', className)} {...props}>
       ...
     </span>
   ),

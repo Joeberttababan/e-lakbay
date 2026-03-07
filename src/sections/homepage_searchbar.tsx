@@ -36,20 +36,20 @@ export const HomepageSearchBar: React.FC<HomepageSearchBarProps> = ({
     <form
       onSubmit={handleSubmit}
       className={cn(
-        'glass-secondary rounded-full flex items-center gap-3 px-4 sm:px-6 py-1.5 w-full max-w-xl text-foreground overflow-hidden',
+        'glass-secondary rounded-full flex items-center gap-3 px-4 sm:px-6 py-1.5 w-full max-w-xl text-black overflow-hidden',
         className
       )}
     >
       <input
         type="text"
-        className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-lg px-2 text-foreground placeholder:text-muted-foreground"
+        className="flex-1 min-w-0 bg-transparent outline-none text-base sm:text-lg px-2 text-black placeholder:text-black/70"
         placeholder={placeholder}
         value={value}
         onChange={(event) => setValue(event.target.value)}
       />
       <button
         type="submit"
-        className="px-4 sm:px-5 py-2 rounded-full bg-hero-gradient text-foreground sm:font-semibold text-xs sm:text-base transition-colors hover:brightness-110 shrink-0"
+        className="px-4 sm:px-5 py-2 rounded-full bg-hero-gradient text-[#FFFFFF] sm:font-semibold text-xs sm:text-base transition-colors hover:brightness-110 shrink-0"
       >
         Search
       </button>
@@ -131,10 +131,10 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
   const handleSelectItem = (item: GroupedSearchItem) => {
     if (item.type === 'destination') {
       onSelectDestination?.(item.id);
-      navigate(`/destinations?highlight=${item.id}`);
+      navigate(`/destinations?id=${item.id}`);
     } else {
       onSelectProduct?.(item.id);
-      navigate(`/products?highlight=${item.id}`);
+      navigate(`/products?id=${item.id}`);
     }
   };
 

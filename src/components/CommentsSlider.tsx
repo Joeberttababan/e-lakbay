@@ -204,16 +204,16 @@ export const CommentsSlider: React.FC<CommentsSliderProps> = ({
                       <button
                         type="button"
                         onClick={() => onProfileClick(comment.user!.id)}
-                        className="text-sm text-white font-medium hover:underline truncate block"
+                        className="text-sm text-black font-medium hover:underline truncate block"
                       >
                         {comment.user?.full_name ?? 'Anonymous'}
                       </button>
                     ) : (
-                      <span className="text-sm text-white font-medium truncate block">
+                      <span className="text-sm text-black font-medium truncate block">
                         {comment.user?.full_name ?? 'Anonymous'}
                       </span>
                     )}
-                    <span className="text-xs text-white/40">{formatDate(comment.created_at)}</span>
+                    <span className="text-xs text-black/40">{formatDate(comment.created_at)}</span>
                   </div>
                 </div>
                 {renderStars(comment.rating)}
@@ -221,7 +221,7 @@ export const CommentsSlider: React.FC<CommentsSliderProps> = ({
 
               {/* Comment text */}
               {comment.comment && (
-                <p className="text-sm text-white/80 leading-relaxed">{comment.comment}</p>
+                <p className="text-sm text-black/80 leading-relaxed">{comment.comment}</p>
               )}
             </div>
           ))

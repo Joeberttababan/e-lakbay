@@ -80,7 +80,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
   const cardImageClassName = `relative overflow-hidden rounded-bl-xl rounded-tr-xl ${imageClassName ?? 'aspect-[4/3]'}`;
 
   const content = (
-    <div className="flex flex-col h-full text-white">
+    <div className="flex flex-col h-full text-black">
       <div className={cardImageClassName}>
         <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
         <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
@@ -110,9 +110,9 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
       </div>
       {(shouldShowMeta || shouldShowDescription) && (
         <div className="px-4 pb-4 pt-3">
-          {shouldShowMeta && <p className="text-xs text-white/80">{postedBy}</p>}
+          {shouldShowMeta && <p className="text-xs text-black/80">{postedBy}</p>}
           {shouldShowDescription && (
-            <p className="mt-2 text-sm text-white/90 leading-relaxed line-clamp-3">{description}</p>
+            <p className="mt-2 text-sm text-black/90 leading-relaxed line-clamp-3">{description}</p>
           )}
         </div>
       )}

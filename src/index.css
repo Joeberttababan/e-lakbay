@@ -67,17 +67,23 @@
 }
 
 @layer utilities {
+  .modal-stone-text {
+    color: #1A1A1A;
+  }
+  .modal-stone-muted {
+    color: rgba(26, 26, 26, 0.6);
+  }
   .dark .skeleton-shimmer {
-    background-color: rgba(100, 116, 139, 0.18);
+    background-color: rgba(200, 200, 200, 0.2);
   }
   .dark .skeleton-shimmer::after {
     background-image: linear-gradient(
       90deg,
-      rgba(100, 116, 139, 0) 0%,
-      rgba(100, 116, 139, 0.25) 45%,
-      rgba(148, 163, 184, 0.35) 50%,
-      rgba(100, 116, 139, 0.25) 55%,
-      rgba(100, 116, 139, 0) 100%
+      rgba(200, 200, 200, 0) 0%,
+      rgba(200, 200, 200, 0.2) 45%,
+      rgba(220, 220, 220, 0.3) 50%,
+      rgba(200, 200, 200, 0.2) 55%,
+      rgba(200, 200, 200, 0) 100%
     );
   }
   .text-hero-gradient {
@@ -99,44 +105,51 @@
     background-image: linear-gradient(to top, var(--hero-gradient-start), var(--hero-gradient-end));
   }
   .glass-secondary {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.08));
-    border: 1px solid rgba(255, 255, 255, 0.24);
-    box-shadow: 0 12px 30px rgba(2, 6, 23, 0.42);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 248, 248, 0.85));
+    border: 1px solid rgba(200, 200, 200, 0.6);
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.12),
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      inset 0 1px 2px rgba(255, 255, 255, 0.8);
+    -webkit-backdrop-filter: blur(16px) brightness(1.05);
+    backdrop-filter: blur(16px) brightness(1.05);
   }
   .glass-card {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.1));
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(252, 252, 252, 0.88));
+    border: 1px solid rgba(200, 200, 200, 0.5);
     box-shadow:
-      -10px 12px 24px rgba(2, 6, 23, 0.46),
-      0 10px 20px rgba(2, 6, 23, 0.34),
-      inset 0 1px 0 rgba(255, 255, 255, 0.16);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
+      0 10px 32px rgba(0, 0, 0, 0.1),
+      0 4px 12px rgba(0, 0, 0, 0.06),
+      inset 0 1px 3px rgba(255, 255, 255, 0.9);
+    -webkit-backdrop-filter: blur(14px) brightness(1.04);
+    backdrop-filter: blur(14px) brightness(1.04);
   }
     .glass-image-card {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(148, 163, 184, 0.1));
-    border: 1px solid rgba(255, 255, 255, 0.24);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(252, 252, 252, 0.88));
+    border: 1px solid rgba(200, 200, 200, 0.5);
+    -webkit-backdrop-filter: blur(14px) brightness(1.04);
+    backdrop-filter: blur(14px) brightness(1.04);
   }
   .glass-card-nonmodal {
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(148, 163, 184, 0.1));
-    border: 1px solid rgba(255, 255, 255, 0.26);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(250, 250, 250, 0.84));
+    border: 1px solid rgba(200, 200, 200, 0.55);
     box-shadow:
-      -12px 14px 26px rgba(2, 6, 23, 0.48),
-      0 10px 16px rgba(2, 6, 23, 0.36),
-      inset 0 1px 0 rgba(255, 255, 255, 0.16);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
+      0 12px 40px rgba(0, 0, 0, 0.1),
+      0 6px 16px rgba(0, 0, 0, 0.06),
+      inset 0 1px 3px rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(12px) brightness(1.03);
+    backdrop-filter: blur(12px) brightness(1.03);
   }
   .glass-button {
-    background-color: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(245, 245, 245, 0.6));
+    border: 1px solid rgba(180, 180, 180, 0.4);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   }
   .glass-button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 248, 248, 0.7));
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
   .hide-scrollbar {
     -ms-overflow-style: none;
@@ -184,36 +197,36 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(29.033% 0.00003 271.152);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: #F8F8F8;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
   --primary: oklch(95.815% 0.00011 271.152);
   --primary-foreground: oklch(0.22 0.02 74);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.8 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --secondary: #E8E8E8;
+  --secondary-foreground: #1A1A1A;
+  --muted: #D4D4D4;
+  --muted-foreground: #505050;
+  --accent: #0D9488;
+  --accent-foreground: #FFFFFF;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: #E0E0E0;
+  --input: #EEEEEE;
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #0D9488;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #E8E8E8;
+  --sidebar-accent-foreground: #1A1A1A;
+  --sidebar-border: #E0E0E0;
   --sidebar-ring: oklch(0.556 0 0);
 }
 
@@ -230,10 +243,6 @@
   }
   body {
     @apply text-foreground;
-    background-image: url('./assets/abstract-studio-dark.webp');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    background-color: #F8F8F8;
   }
 }
