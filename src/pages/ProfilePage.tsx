@@ -302,17 +302,17 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
           {showProfileSkeleton ? (
             <ProfileHeaderSkeleton />
           ) : (
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full border border-border bg-card/60 overflow-hidden flex items-center justify-center text-lg font-semibold">
+            <div className="flex items-flex-start gap-4 min-w-0">
+              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full border border-border bg-card/60  flex items-center justify-center text-lg font-semibold flex-shrink-0">
                 {profileInfo?.imageUrl ? (
                   <img src={profileInfo.imageUrl} alt={displayName} className="h-full w-full object-cover" />
                 ) : (
                   displayName.charAt(0).toUpperCase()
                 )}
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-semibold">{displayName}</h1>
-                {profileInfo?.battleCry && <p className="text-sm text-black/70 mt-1">{profileInfo.battleCry}</p>}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl sm:text-3xl font-semibold break-words whitespace-normal">{displayName}</h1>
+                {profileInfo?.battleCry && <p className="text-sm text-black/70 mt-1 break-words whitespace-normal">{profileInfo.battleCry}</p>}
               </div>
             </div>
           )}

@@ -268,7 +268,7 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="glass-secondary modal-stone-text border border-white/20 rounded-2xl p-3 md:p-6 w-full max-w-4xl h-[85vh] md:h-[80vh] max-h-[85vh] md:max-h-[80vh] overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y"
+        className="glass-secondary text-black border border-black/20 rounded-2xl p-3 md:p-6 w-full max-w-4xl h-[85vh] md:h-[80vh] max-h-[85vh] md:max-h-[80vh] overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y"
         role="dialog"
         aria-modal="true"
         aria-labelledby="destination-upload-title"
@@ -277,11 +277,11 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-semibold" id="destination-upload-title">Destination Upload</h2>
-            <p className="text-sm modal-stone-muted">{mode === 'edit' ? 'Update your uploaded destination.' : 'Add new destinations with visuals.'}</p>
+            <p className="text-sm text-black/60">{mode === 'edit' ? 'Update your uploaded destination.' : 'Add new destinations with visuals.'}</p>
           </div>
           <button
             type="button"
-            className="modal-stone-muted hover:opacity-80 text-2xl"
+            className="text-black/60 hover:opacity-80 text-2xl"
             onClick={onClose}
             aria-label="Close"
           >
@@ -291,8 +291,8 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
         <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm modal-stone-muted">Destination name</label>
-              <span className={`text-xs ${destinationName.length > 64 ? 'text-red-400' : 'modal-stone-soft'}`}>
+              <label className="text-sm text-black/60">Destination name</label>
+              <span className={`text-xs ${destinationName.length > 64 ? 'text-red-400' : 'text-black/50'}`}>
                 {destinationName.length}/64
               </span>
             </div>
@@ -301,23 +301,23 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
               value={destinationName}
               onChange={(event) => setDestinationName(event.target.value.slice(0, 64))}
               maxLength={64}
-              placeholder="San Vicente Cove"
-              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+              placeholder="e.g. Sta. Maria Church"
+              className="rounded-lg bg-white/10 border border-black/15 px-4 py-2 text-sm text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-white/30"
             />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <label className="text-sm modal-stone-muted">Location</label>
+            <label className="text-sm text-black/60">Location</label>
             <LocationPickerMap onLocationConfirmed={setLocationData} initialLocation={locationData} hideIntro defaultPinMapOpen={false} />
             {locationData && (
-              <p className="text-xs modal-stone-muted">
+              <p className="text-xs text-black/60">
                 Location: {locationData.barangay ?? 'Unknown'}, {locationData.municipality ?? 'Unknown'}
               </p>
             )}
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm modal-stone-muted">Description</label>
-              <span className={`text-xs ${description.length > 2200 ? 'text-red-400' : 'modal-stone-soft'}`}>
+              <label className="text-sm text-black/60">Description</label>
+              <span className={`text-xs ${description.length > 2200 ? 'text-red-400' : 'text-black/50'}`}>
                 {description.length}/2,200
               </span>
             </div>
@@ -327,24 +327,24 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
               onChange={(event) => setDescription(event.target.value.slice(0, 2200))}
               maxLength={2200}
               placeholder="Describe the destination..."
-              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-white/30"
             />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <label htmlFor="destination-upload-images" className="text-sm modal-stone-muted">Image upload</label>
+            <label htmlFor="destination-upload-images" className="text-sm text-black/60">Image upload</label>
             <input
               id="destination-upload-images"
               type="file"
               multiple
               accept="image/*"
               onChange={handleFilesChange}
-              className="rounded-lg bg-black/5 border border-black/15 px-4 py-2 text-sm modal-stone-text file:mr-3 file:rounded-full file:border-0 file:bg-black/10 file:px-3 file:py-1 file:text-xs file:text-black"
+              className="rounded-lg bg-black/5 border border-black/15 px-4 py-2 text-sm text-black file:mr-3 file:rounded-full file:border-0 file:bg-black/10 file:px-3 file:py-1 file:text-xs file:text-black"
             />
-            <p className="text-xs modal-stone-soft">{previewCountLabel}</p>
+            <p className="text-xs text-black/50">{previewCountLabel}</p>
           </div>
           {(existingImageUrls.length > 0 || previews.length > 0) && (
             <div className="sm:col-span-2">
-              <p className="text-xs modal-stone-muted mb-2">Preview</p>
+              <p className="text-xs text-black/60 mb-2">Preview</p>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {existingImageUrls.map((src, index) => (
                   <div key={`existing-${src}-${index}`} className="relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-white/10">
@@ -352,7 +352,7 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setExistingImageUrls((prev) => prev.filter((_, i) => i !== index))}
-                      className="absolute top-1 right-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white"
+                      className="absolute top-1 right-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-black/50"
                     >
                       Remove
                     </button>
@@ -371,7 +371,7 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
                           return prev.filter((_, i) => i !== index);
                         });
                       }}
-                      className="absolute top-1 right-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-white"
+                      className="absolute top-1 right-1 rounded-full bg-black/60 px-2 py-0.5 text-[10px] text-black"
                     >
                       Remove
                     </button>
@@ -388,7 +388,7 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
           <div className="sm:col-span-2 flex justify-end gap-3">
             <button
               type="button"
-              className="text-sm modal-stone-muted hover:opacity-80"
+              className="text-sm text-black/60 hover:opacity-80"
               onClick={onClose}
             >
               Cancel

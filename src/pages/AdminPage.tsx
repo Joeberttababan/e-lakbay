@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
-import { Users, BarChart3 } from 'lucide-react';
-import { ProfilesTab, AnalyticsTab } from '../components/admin';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Users, BarChart3, Calendar } from 'lucide-react';
+import { ProfilesTab, AnalyticsTab, EventsTab, VisitorAnalyticsDashboard } from '../components/admin';
 
-type TabType = 'profiles' | 'analytics';
+type TabType = 'profiles' | 'analytics' | 'events';
 
 const AdminPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('profiles');
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab') as TabType | null;
+  const [activeTab, setActiveTab] = useState<TabType>(tabParam || 'analytics');
+
+  useEffect(() => {
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
 
   return (
     <main className="min-h-screen bg-[#F8F8F8] text-black px-6 pt-18 md:pt-24 pb-8">
@@ -14,11 +23,23 @@ const AdminPage: React.FC = () => {
         <h1 className="mt-3 text-3xl sm:text-4xl font-semibold">Developer Console</h1>
 
         {/* Main Tabs */}
-        <div className="mt-6 flex gap-2 border-b border-[#1A1A1A]/10">
+        <div className="mt-6 flex gap-2 border-b border-[#1A1A1A]/10 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setActiveTab('analytics')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'analytics'
+                ? 'text-[#1A1A1A] border-b-2 border-[#1A1A1A]'
+                : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </button>
           <button
             type="button"
             onClick={() => setActiveTab('profiles')}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
               activeTab === 'profiles'
                 ? 'text-[#1A1A1A] border-b-2 border-[#1A1A1A]'
                 : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]'
@@ -29,21 +50,33 @@ const AdminPage: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('analytics')}
-            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${
-              activeTab === 'analytics'
+            onClick={() => setActiveTab('events')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'events'
                 ? 'text-[#1A1A1A] border-b-2 border-[#1A1A1A]'
                 : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]'
             }`}
           >
-            <BarChart3 className="h-4 w-4" />
-            Analytics
+            <Calendar className="h-4 w-4" />
+            Events
           </button>
         </div>
 
         {/* Tab Content */}
+        {activeTab === 'analytics' && (
+          <div className="space-y-8">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Visitor Analytics</h2>
+              <VisitorAnalyticsDashboard />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>
+              <AnalyticsTab />
+            </div>
+          </div>
+        )}
         {activeTab === 'profiles' && <ProfilesTab />}
-        {activeTab === 'analytics' && <AnalyticsTab />}
+        {activeTab === 'events' && <EventsTab />}
       </div>
     </main>
   );

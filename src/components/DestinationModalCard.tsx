@@ -389,7 +389,7 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
           </button>
         </div>
       ) : (
-        meta && <span className="text-[10px] sm:text-xs text-white/50">{meta}</span>
+        meta && <span className="text-[10px] sm:text-xs text-black/60">{meta}</span>
       )}
     </header>
   );

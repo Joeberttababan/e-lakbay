@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from './modern-ui/button';
 import { cn } from '../lib/utils';
 import { useModal } from './ModalContext';
-import logoWhite from '../assets/e-lakbay_Logo.svg';
+import logoWhite from '../assets/e-lakbay_logo(white).svg';
+import logoBlack from '../assets/E-lakbay_Logo.svg';
 import type { Profile } from './AuthProvider';
 
 interface NavBarProps {
@@ -15,6 +16,7 @@ interface NavBarProps {
   onDashboard: () => void;
   onHome: () => void;
   onJumpToSection: (sectionId: string) => void;
+  onNavigateEvents?: () => void;
 }
 
 export const NavBar: React.FC<NavBarProps> = ({
@@ -26,9 +28,11 @@ export const NavBar: React.FC<NavBarProps> = ({
   onDashboard,
   onHome,
   onJumpToSection,
+  onNavigateEvents,
 }) => {
   const { openModal } = useModal();
   const location = useLocation();
+  const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -83,14 +87,15 @@ export const NavBar: React.FC<NavBarProps> = ({
   const isDestinationsActive = location.pathname === '/destinations' || (isHome && activeHash === 'top-destinations');
   const isProductsActive = location.pathname === '/products' || (isHome && activeHash === 'products');
   const isMunicipalitiesActive = isHome && activeHash === 'municipalities';
-  const activeLinkClass = 'font-semibold underline underline-offset-4 text-black';
+  const activeLinkClass = isHome ? 'font-semibold underline underline-offset-4 text-white' : 'font-semibold underline underline-offset-4 text-black';
+  const navTextClass = isHome ? 'text-white' : 'text-black';
 
   return (
-    <nav className="absolute top-0 left-0 z-[60] w-full flex items-center justify-between px-4 py-1 md:px-8 md:py-4 text-black">
+    <nav className="absolute top-0 left-0 z-[60] w-full flex items-center justify-between px-4 py-1 md:px-8 md:py-4">
       {/* Logo */}
       <button type="button" className="select-none" onClick={onHome} aria-label="Go to homepage">
         <img 
-          src={logoWhite} 
+          src={isHome ? logoWhite : logoBlack} 
           alt="E-Lakbay" 
           className="h-7 md:h-14 w-auto opacity-90"
         />
@@ -100,23 +105,48 @@ export const NavBar: React.FC<NavBarProps> = ({
         <button
           type="button"
           onClick={() => handleSectionJump('top-destinations')}
-          className={cn('cursor-pointer hover:text-black/70 transition-colors', isDestinationsActive && activeLinkClass)}
+          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70', isDestinationsActive && activeLinkClass)}
         >
           Destinations
         </button>
         <button
           type="button"
           onClick={() => handleSectionJump('municipalities')}
-          className={cn('cursor-pointer hover:text-black/70 transition-colors', isMunicipalitiesActive && activeLinkClass)}
+          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70', isMunicipalitiesActive && activeLinkClass)}
         >
           Municipalities
         </button>
         <button
           type="button"
           onClick={() => handleSectionJump('products')}
-          className={cn('cursor-pointer hover:text-black/70 transition-colors', isProductsActive && activeLinkClass)}
+          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70', isProductsActive && activeLinkClass)}
         >
           Products
+        </button>
+        <button
+          type="button"
+          onClick={() => onNavigateEvents?.()}
+          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+        >
+          Events
+        </button>
+        <button
+          type="button"
+          onClick={() => handleSectionJump('wildlife-conservation')}
+          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+        >
+          Wildlife Conservation
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            navigate('/analytics');
+            setIsMenuOpen(false);
+          }}
+          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+          aria-label="View visitor analytics"
+        >
+          Visitors
         </button>
         {!isAuthenticated ? (
           <>
@@ -159,7 +189,7 @@ export const NavBar: React.FC<NavBarProps> = ({
       <button
         ref={menuButtonRef}
         type="button"
-        className="md:hidden inline-flex items-center justify-center rounded-full p-2 text-black/90 hover:text-black hover:bg-black/10 transition-colors"
+        className={cn('md:hidden inline-flex items-center justify-center rounded-full p-2 transition-colors', isHome ? 'text-white hover:text-white/70 hover:bg-white/10' : 'text-black/90 hover:text-black hover:bg-black/10')}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         onClick={() => setIsMenuOpen((prev) => !prev)}
@@ -184,11 +214,11 @@ export const NavBar: React.FC<NavBarProps> = ({
           isMenuOpen ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
         )}
       >
-        <div className="relative flex flex-col gap-2 px-4 py-4 text-black">
+        <div className={cn("relative flex flex-col gap-2 px-4 py-4", isHome ? 'text-white' : 'text-black')}>
           <button
             type="button"
             onClick={() => setIsMenuOpen(false)}
-            className="absolute right-3 top-3 inline-flex items-center justify-center rounded-full p-2 text-black/90 hover:text-black hover:bg-black/10 transition-colors"
+            className={cn("absolute right-3 top-3 inline-flex items-center justify-center rounded-full p-2 transition-colors", isHome ? 'text-white hover:text-white/70 hover:bg-white/10' : 'text-black/90 hover:text-black hover:bg-black/10')}
             aria-label="Close navigation menu"
           >
             <svg
@@ -207,8 +237,9 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('top-destinations')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide hover:text-black/70 transition-colors',
-              isDestinationsActive && 'text-black font-semibold'
+              'text-left text-sm font-medium tracking-wide transition-colors',
+              isHome ? 'hover:text-white/70' : 'hover:text-black/70',
+              isDestinationsActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold')
             )}
           >
             Destinations
@@ -217,8 +248,9 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('products')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide hover:text-black/70 transition-colors',
-              isProductsActive && 'text-black font-semibold'
+              'text-left text-sm font-medium tracking-wide transition-colors',
+              isHome ? 'hover:text-white/70' : 'hover:text-black/70',
+              isProductsActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold')
             )}
           >
             Products
@@ -227,11 +259,40 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('municipalities')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide hover:text-black/70 transition-colors',
-              isMunicipalitiesActive && 'text-black font-semibold'
+              'text-left text-sm font-medium tracking-wide transition-colors',
+              isHome ? 'hover:text-white/70' : 'hover:text-black/70',
+              isMunicipalitiesActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold')
             )}
           >
             Municipalities
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onNavigateEvents?.();
+              setIsMenuOpen(false);
+            }}
+            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+          >
+            Events
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSectionJump('wildlife-conservation')}
+            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+          >
+            Wildlife Conservation
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              navigate('/analytics');
+              setIsMenuOpen(false);
+            }}
+            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+            aria-label="View visitor analytics"
+          >
+            Visitors
           </button>
           {!isAuthenticated ? (
             <>

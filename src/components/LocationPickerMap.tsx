@@ -141,25 +141,25 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
   return (
     <div className="flex flex-col gap-3">
       {!hideIntro && (
-        <div className="rounded-2xl border border-white/15 bg-white/5 p-3 text-xs text-white/70">
+        <div className="rounded-2xl border border-black/15 bg-black/5 p-3 text-xs text-black/70">
           Select a municipality{showBarangay ? ' and barangay' : ''}. The map preview is optional if you want to refine the pin.
         </div>
       )}
 
       {errorMessage && (
-        <div className="rounded-lg border border-red-200/30 bg-red-500/20 px-3 py-2 text-xs text-red-100">
+        <div className="rounded-lg border border-red-400/30 bg-red-500/20 px-3 py-2 text-xs text-red-700">
           {errorMessage}
         </div>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label htmlFor="location-municipality" className="text-xs text-white/60">Municipality / City</label>
+          <label htmlFor="location-municipality" className="text-xs text-black/60">Municipality / City</label>
           <select
             id="location-municipality"
             value={municipality}
             onChange={(event) => handleMunicipalityChange(event.target.value)}
-            className="mt-1 w-full rounded-lg bg-white/10 border border-white/15 px-3 py-2 text-xs text-white"
+            className="mt-1 w-full rounded-lg bg-white/10 border border-black/15 px-3 py-2 text-xs text-black"
           >
             <option value="">Select municipality</option>
             {municipalities.map((item) => (
@@ -171,13 +171,13 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
         </div>
         {showBarangay && (
           <div>
-            <label htmlFor="location-barangay" className="text-xs text-white/60">Barangay</label>
+            <label htmlFor="location-barangay" className="text-xs text-black/60">Barangay</label>
             <select
               id="location-barangay"
               value={barangay}
               onChange={(event) => void handleBarangayChange(event.target.value)}
               disabled={!municipality}
-              className="mt-1 w-full rounded-lg bg-white/10 border border-white/15 px-3 py-2 text-xs text-white disabled:opacity-60"
+              className="mt-1 w-full rounded-lg bg-white/10 border border-black/15 px-3 py-2 text-xs text-black disabled:opacity-60"
             >
               <option value="">Select barangay</option>
               {barangays.map((item) => (
@@ -191,13 +191,13 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
       </div>
 
       <Accordion type="single" collapsible defaultValue={defaultPinMapOpen ? 'pin-map' : undefined}>
-        <AccordionItem value="pin-map" className="border-white/10">
-          <AccordionTrigger className="text-xs text-white/80">Pin map (optional)</AccordionTrigger>
+        <AccordionItem value="pin-map" className="border-black/10">
+          <AccordionTrigger className="text-xs text-black/80">Pin map (optional)</AccordionTrigger>
           <AccordionContent>
-            <div className="rounded-2xl border border-white/15 bg-white/5 p-3 text-xs text-white/70">
+            <div className="rounded-2xl border border-black/15 bg-black/5 p-3 text-xs text-black/70">
               Click on the map to refine the exact pin. This is optional.
             </div>
-            <div className="mt-3 h-72 w-full overflow-hidden rounded-2xl border border-white/15">
+            <div className="mt-3 h-72 w-full overflow-hidden rounded-2xl border border-black/15">
               <GoogleMapReact
                 bootstrapURLKeys={{ key: apiKey ?? '' }}
                 center={pin ?? mapCenter}
@@ -208,7 +208,7 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
               </GoogleMapReact>
             </div>
             {status === 'loading' && (
-              <p className="mt-2 text-xs text-white/60">Pinning the exact location...</p>
+              <p className="mt-2 text-xs text-black/60">Pinning the exact location...</p>
             )}
           </AccordionContent>
         </AccordionItem>

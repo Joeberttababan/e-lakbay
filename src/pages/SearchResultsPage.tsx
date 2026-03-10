@@ -452,7 +452,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
               id="min-rating-filter"
               value={minRating}
               onChange={(e) => setMinRating(Number(e.target.value))}
-              className="px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm border border-border"
+              className="px-3 py-1.5 rounded-lg bg-muted text-black text-sm border border-border"
             >
               <option value={0}>Any</option>
               <option value={3}>3+ Stars</option>
@@ -468,7 +468,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
               id="sort-filter"
               value={sortOption}
               onChange={(e) => setSortOption(e.target.value as SortOption)}
-              className="px-3 py-1.5 rounded-lg bg-muted text-foreground text-sm border border-border"
+              className="px-3 py-1.5 rounded-lg bg-muted text-black text-sm border border-border"
             >
               <option value="relevant">Most Relevant</option>
               <option value="rating-high">Highest Rated</option>

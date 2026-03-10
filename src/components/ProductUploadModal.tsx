@@ -272,7 +272,7 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
       onClick={onClose}
     >
       <div
-        className="glass-secondary modal-stone-text border border-white/20 rounded-2xl p-3 md:p-6 w-full max-w-4xl h-[85vh] md:h-[80vh] max-h-[85vh] md:max-h-[80vh] overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y"
+        className="glass-secondary text-black border border-white/20 rounded-2xl p-3 md:p-6 w-full max-w-4xl h-[85vh] md:h-[80vh] max-h-[85vh] md:max-h-[80vh] overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y"
         role="dialog"
         aria-modal="true"
         aria-labelledby="product-upload-title"
@@ -281,11 +281,11 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-semibold" id="product-upload-title">Product Upload</h2>
-            <p className="text-sm modal-stone-muted">{mode === 'edit' ? 'Update your uploaded product.' : 'Add new products tied to destinations.'}</p>
+            <p className="text-sm text-black/60">{mode === 'edit' ? 'Update your uploaded product.' : 'Add new products tied to destinations.'}</p>
           </div>
           <button
             type="button"
-            className="modal-stone-muted hover:opacity-80 text-2xl"
+            className="text-black/60 hover:opacity-80 text-2xl"
             onClick={onClose}
             aria-label="Close"
           >
@@ -295,8 +295,8 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
         <form className="grid gap-4 sm:grid-cols-2" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm modal-stone-muted">Product name</label>
-              <span className={`text-xs ${productName.length > 64 ? 'text-red-400' : 'modal-stone-soft'}`}>
+              <label className="text-sm text-black/60">Product name</label>
+              <span className={`text-xs ${productName.length > 64 ? 'text-red-400' : 'text-black/50'}`}>
                 {productName.length}/64
               </span>
             </div>
@@ -306,22 +306,22 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
               onChange={(event) => setProductName(event.target.value.slice(0, 64))}
               maxLength={64}
               placeholder="Ilocos Souvenir Bundle"
-              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm text-black placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
             />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <label className="text-sm modal-stone-muted">Location</label>
+            <label className="text-sm text-black/60">Location</label>
             <LocationPickerMap onLocationConfirmed={setLocationData} initialLocation={locationData} hideIntro defaultPinMapOpen={false} showBarangay={false} />
             {locationData && (
-              <p className="text-xs modal-stone-muted">
+              <p className="text-xs text-black/60">
                 Location: {locationData.municipality ?? 'Unknown'}
               </p>
             )}
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm modal-stone-muted">Description</label>
-              <span className={`text-xs ${description.length > 2200 ? 'text-red-400' : 'modal-stone-soft'}`}>
+              <label className="text-sm text-black/60">Description</label>
+              <span className={`text-xs ${description.length > 2200 ? 'text-red-400' : 'text-black/50'}`}>
                 {description.length}/2,200
               </span>
             </div>
@@ -331,24 +331,24 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
               onChange={(event) => setDescription(event.target.value.slice(0, 2200))}
               maxLength={2200}
               placeholder="Describe the product..."
-              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm text-black placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
             />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <label htmlFor="product-upload-images" className="text-sm modal-stone-muted">Image upload</label>
+            <label htmlFor="product-upload-images" className="text-sm text-black/60">Image upload</label>
             <input
               id="product-upload-images"
               type="file"
               multiple
               accept="image/*"
               onChange={handleFilesChange}
-              className="rounded-lg bg-black/5 border border-black/15 px-4 py-2 text-sm modal-stone-text file:mr-3 file:rounded-full file:border-0 file:bg-black/10 file:px-3 file:py-1 file:text-xs file:text-black"
+              className="rounded-lg bg-black/5 border border-black/15 px-4 py-2 text-sm text-black file:mr-3 file:rounded-full file:border-0 file:bg-black/10 file:px-3 file:py-1 file:text-xs file:text-black"
             />
-            <p className="text-xs modal-stone-muted">{previewCountLabel}</p>
+            <p className="text-xs text-black/60">{previewCountLabel}</p>
           </div>
           {(existingImageUrls.length > 0 || previews.length > 0) && (
             <div className="sm:col-span-2">
-              <p className="text-xs modal-stone-muted mb-2">Preview</p>
+              <p className="text-xs text-black/60 mb-2">Preview</p>
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {existingImageUrls.map((src, index) => (
                   <div key={`existing-${src}-${index}`} className="relative aspect-square rounded-lg overflow-hidden glass-card">
@@ -392,7 +392,7 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
           <div className="sm:col-span-2 flex justify-end gap-3">
             <button
               type="button"
-              className="text-sm modal-stone-muted hover:opacity-80"
+              className="text-sm text-black/60 hover:opacity-80"
               onClick={onClose}
             >
               Cancel

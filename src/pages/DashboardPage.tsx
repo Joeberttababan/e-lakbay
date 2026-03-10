@@ -7,6 +7,7 @@ import { DashboardDestinationSection } from '../sections/dashboard_destinationse
 import { DashboardSidebar } from '../components/DashboardSidebar';
 import { ProductUploadModal } from '../components/ProductUploadModal';
 import { DestinationUploadModal } from '../components/DestinationUploadModal';
+import { EventUploadModal } from '../components/EventUploadModal';
 import { ProductModal } from '../components/ProductModal';
 import { useAuth } from '../components/AuthProvider';
 
@@ -48,6 +49,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
   const battleCry = profile?.battle_cry || 'Ready for the next adventure.';
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
+  const [isEventOpen, setIsEventOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<ActiveProduct | null>(null);
   const [editingProduct, setEditingProduct] = useState<ActiveProduct | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -96,6 +98,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
               fullName={profile?.full_name ?? null}
               onOpenProductUpload={() => setIsProductOpen(true)}
               onOpenDestinationUpload={() => setIsDestinationOpen(true)}
+              onOpenEventUpload={() => setIsEventOpen(true)}
               onJumpToSection={handleJumpToSection}
             />
           </motion.div>
@@ -130,6 +133,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
 
       <ProductUploadModal open={isProductOpen} onClose={() => setIsProductOpen(false)} />
       <DestinationUploadModal open={isDestinationOpen} onClose={() => setIsDestinationOpen(false)} />
+      <EventUploadModal isOpen={isEventOpen} onClose={() => setIsEventOpen(false)} />
       <ProductModal
         open={Boolean(activeProduct)}
         product={activeProduct}

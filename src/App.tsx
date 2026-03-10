@@ -9,8 +9,10 @@ import { HomePage } from './pages/HomePage';
 import { DestinationsPage } from './pages/DestinationsPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
+import { EventsPage } from './pages/EventsPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
+import AnalyticsPage from './pages/AnalyticsPage';
 import TouristProfileDashboard from './pages/TouristProfileDashboard';
 import NotFoundPage from './pages/NotFoundPage';
 import { SonnerGlobal } from './components/modern-ui/sonner';
@@ -47,6 +49,12 @@ const AdminRoute: React.FC = () => {
   }
 
   return <AdminPage />;
+};
+
+// Route guard for analytics - accessible to all authenticated users
+// Analytics route - public access for all visitors
+const AnalyticsRoute: React.FC = () => {
+  return <AnalyticsPage />;
 };
 
 // Route guard for municipality dashboard
@@ -243,6 +251,7 @@ const AppContent: React.FC = () => {
             onLogout={signOut}
             onHome={() => navigate('/')}
             onJumpToSection={handleJumpToSection}
+            onNavigateEvents={() => navigate('/events')}
           />
           <Routes>
             <Route
@@ -274,6 +283,14 @@ const AppContent: React.FC = () => {
               }
             />
             <Route
+              path="/events"
+              element={
+                <EventsPage
+                  onBackHome={() => navigate('/')}
+                />
+              }
+            />
+            <Route
               path="/search"
               element={
                 <SearchResultsPage
@@ -295,10 +312,11 @@ const AppContent: React.FC = () => {
               element={<TouristRoute />}
             />
             <Route path="/admin" element={<AdminRoute />} />
+            <Route path="/analytics" element={<AnalyticsRoute />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
-        {location.pathname !== '/dashboard' && location.pathname !== '/admin' && location.pathname !== '/tourist-dashboard' && <Footer onOpenComingSoon={() => setIsComingSoonOpen(true)} />}
+        {location.pathname !== '/dashboard' && location.pathname !== '/admin' && location.pathname !== '/tourist-dashboard' && location.pathname !== '/analytics' && <Footer onOpenComingSoon={() => setIsComingSoonOpen(true)} />}
         <GlobalModal onModeChange={setActive} />
       </div>
       <SonnerGlobal />

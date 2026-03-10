@@ -18,7 +18,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onViewDestinations, onViewPr
     : {
         initial: { opacity: 0, y: 16 },
         animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.45, ease: 'easeOut' },
+        transition: { duration: 0.45, ease: 'easeOut' } as any,
       };
   return (
     <>
@@ -28,10 +28,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onViewDestinations, onViewPr
           <motion.div {...sectionMotion}>
             <HomepageMunicipalitiesSection onSelectProfile={onViewProfile} />
           </motion.div>
-          <motion.div {...sectionMotion} transition={shouldReduceMotion ? undefined : { duration: 0.45, ease: 'easeOut', delay: 0.08 }}>
+          <motion.div {...sectionMotion} transition={shouldReduceMotion ? undefined : ({ duration: 0.45, ease: 'easeOut', delay: 0.14 } as any)}>
             <HomepageTopDestinationsSection onViewMore={onViewDestinations} onViewProfile={onViewProfile} />
           </motion.div>
-          <motion.div {...sectionMotion} transition={shouldReduceMotion ? undefined : { duration: 0.45, ease: 'easeOut', delay: 0.14 }}>
+          <motion.div {...sectionMotion} transition={shouldReduceMotion ? undefined : ({ duration: 0.45, ease: 'easeOut', delay: 0.2 } as any)}>
             <HomepageProductSection onViewProfile={onViewProfile} onViewProducts={onViewProducts} />
           </motion.div>
         </div>

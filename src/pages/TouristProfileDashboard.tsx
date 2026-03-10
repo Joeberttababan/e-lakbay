@@ -28,7 +28,20 @@ interface RatingItem {
   createdAt: string;
 }
 
-type TabType = 'all' | 'destinations' | 'products';
+type TabType = 'all' | 'destinations' | 'products' | 'pinned';
+
+interface PinnedEvent {
+  id: string;
+  title: string;
+  description: string | null;
+  start_date: string;
+  end_date: string;
+  location: string | null;
+  category: 'festival' | 'cultural' | 'holiday' | 'other';
+  municipality_id: string;
+  municipality_name?: string;
+  pinned_at: string;
+}
 
 interface DestinationData {
   id: string;
@@ -181,7 +194,66 @@ const TouristProfileDashboard: React.FC = () => {
     enabled: Boolean(profile?.id),
   });
 
-  const isLoading = isDestRatingsPending || isProdRatingsPending;
+  // Fetch pinned events
+  const { data: pinnedEvents = [], isPending: isPinnedEventsPending } = useQuery({
+    queryKey: ['pinned-events', profile?.id],
+    queryFn: async () => {
+      if (!profile?.id) return [];
+      const { data, error } = await supabase
+        .from('pinned_events')
+        .select(`
+          id,
+          event_id,
+          pinned_at,
+          events (
+            id,
+            title,
+            description,
+            start_date,
+            end_date,
+            location,
+            category,
+            municipality_id,
+            profiles:municipality_id(full_name)
+          )
+        `)
+        .eq('user_id', profile.id)
+        .order('pinned_at', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch pinned events:', error);
+        toast.error('Failed to load pinned events.');
+        return [];
+      }
+
+      return (data ?? []).map((row) => {
+        const rawEvent = row.events as unknown;
+        const event = Array.isArray(rawEvent) 
+          ? (rawEvent[0] as any)
+          : (rawEvent as any);
+        const rawMunicipality = event?.profiles as unknown;
+        const municipality = Array.isArray(rawMunicipality)
+          ? (rawMunicipality[0] as { full_name: string } | undefined)
+          : (rawMunicipality as { full_name: string } | null);
+
+        return {
+          id: row.id,
+          title: event?.title ?? 'Unknown Event',
+          description: event?.description ?? null,
+          start_date: event?.start_date ?? '',
+          end_date: event?.end_date ?? '',
+          location: event?.location ?? null,
+          category: event?.category ?? 'other',
+          municipality_id: event?.municipality_id ?? '',
+          municipality_name: municipality?.full_name ?? 'Unknown',
+          pinned_at: row.pinned_at,
+        } as PinnedEvent;
+      });
+    },
+    enabled: Boolean(profile?.id),
+  });
+
+  const isLoading = isDestRatingsPending || isProdRatingsPending || isPinnedEventsPending;
 
   // Combine and compute stats
   const allRatings: RatingItem[] = useMemo(() => {
@@ -202,6 +274,8 @@ const TouristProfileDashboard: React.FC = () => {
         return allRatings.filter((r) => r.type === 'destination');
       case 'products':
         return allRatings.filter((r) => r.type === 'product');
+      case 'pinned':
+        return [];
       default:
         return allRatings;
     }
@@ -402,7 +476,7 @@ const TouristProfileDashboard: React.FC = () => {
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
-              className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-[#1A1A1A]/20'}`}
+                className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-black/20'}`}
             />
           ))}
         </div>
@@ -411,7 +485,7 @@ const TouristProfileDashboard: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#F8F8F8] text-[#1A1A1A] pt-20 pb-16">
+    <main className="min-h-screen bg-[#F8F8F8] text-black pt-20 pb-16">
       <div className="container mx-auto px-4 md:px-8">
         {/* Breadcrumb */}
         <Breadcrumb className="mb-6">
@@ -419,14 +493,14 @@ const TouristProfileDashboard: React.FC = () => {
             <BreadcrumbItem>
               <BreadcrumbLink
                 onClick={() => navigate('/')}
-                className="cursor-pointer text-[#1A1A1A]/70 hover:text-[#1A1A1A] transition-colors"
+                className="cursor-pointer text-black/70 hover:text-black transition-colors"
               >
                 Home
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator className="text-[#1A1A1A]/50" />
+            <BreadcrumbSeparator className="text-black/50" />
             <BreadcrumbItem>
-              <BreadcrumbPage className="text-[#1A1A1A] font-medium">My Profile</BreadcrumbPage>
+              <BreadcrumbPage className="text-black font-medium">My Profile</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -463,7 +537,7 @@ const TouristProfileDashboard: React.FC = () => {
                   />
                 ) : (
                   <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-4xl md:text-5xl font-bold text-[#1A1A1A]">
+                    <span className="text-4xl md:text-5xl font-bold text-black">
                       {(profile?.full_name?.[0] ?? profile?.email?.[0] ?? 'U').toUpperCase()}
                     </span>
                   </div>
@@ -487,7 +561,7 @@ const TouristProfileDashboard: React.FC = () => {
                           setEditingNameValue(profile?.full_name ?? '');
                         }
                       }}
-                      className="text-xl md:text-2xl font-extrabold text-center bg-[#EEEEEE] border border-[#1A1A1A]/15 rounded-lg px-3 py-1 text-[#1A1A1A] outline-none focus:border-[#0D9488]/50"
+                      className="text-xl md:text-2xl font-extrabold text-center bg-[#EEEEEE] border border-black/15 rounded-lg px-3 py-1 text-black outline-none focus:border-[#0D9488]/50"
                       autoFocus
                       disabled={isSavingName}
                     />
@@ -535,7 +609,7 @@ const TouristProfileDashboard: React.FC = () => {
                       className="p-1.5 rounded-lg hover:bg-[#1A1A1A]/10 transition-colors"
                       aria-label="Edit name"
                     >
-                      <svg className="h-4 w-4 text-[#1A1A1A]/60 hover:text-[#1A1A1A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <svg className="h-4 w-4 text-black/60 hover:text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                       </svg>
@@ -546,12 +620,12 @@ const TouristProfileDashboard: React.FC = () => {
 
               {/* Email */}
               {profile?.email && (
-                <p className="text-sm text-[#1A1A1A]/60 mt-1">{profile.email}</p>
+                <p className="text-sm text-black/60 mt-1">{profile.email}</p>
               )}
 
               {/* Battle Cry */}
               {profile?.battle_cry && (
-                <p className="text-sm text-[#1A1A1A]/80 italic mt-2 text-center">
+                <p className="text-sm text-black/80 italic mt-2 text-center">
                   "{profile.battle_cry}"
                 </p>
               )}
@@ -566,7 +640,7 @@ const TouristProfileDashboard: React.FC = () => {
               className="glass-secondary rounded-2xl p-6 flex items-center justify-between"
             >
               <div>
-                <h3 className="text-sm text-[#1A1A1A]/60 uppercase tracking-wide">Total Ratings Given</h3>
+                <h3 className="text-sm text-black/60 uppercase tracking-wide">Total Ratings Given</h3>
                 <p className="text-4xl md:text-5xl font-bold mt-2">
                   {isLoading ? (
                     <span className="inline-block w-16 h-12 bg-[#1A1A1A]/10 rounded animate-pulse" />
@@ -592,7 +666,7 @@ const TouristProfileDashboard: React.FC = () => {
                 {...getItemMotion(2)}
                 className="glass-secondary rounded-2xl p-6"
               >
-                <h3 className="text-sm text-[#1A1A1A]/60 uppercase tracking-wide">Destinations Rated</h3>
+                <h3 className="text-sm text-black/60 uppercase tracking-wide">Destinations Rated</h3>
                 <p className="text-3xl md:text-4xl font-bold mt-2">
                   {isLoading ? (
                     <span className="inline-block w-12 h-10 bg-white/10 rounded animate-pulse" />
@@ -606,7 +680,7 @@ const TouristProfileDashboard: React.FC = () => {
                 {...getItemMotion(3)}
                 className="glass-secondary rounded-2xl p-6"
               >
-                <h3 className="text-sm text-[#1A1A1A]/60 uppercase tracking-wide">Products Rated</h3>
+                <h3 className="text-sm text-black/60 uppercase tracking-wide">Products Rated</h3>
                 <p className="text-3xl md:text-4xl font-bold mt-2">
                   {isLoading ? (
                     <span className="inline-block w-12 h-10 bg-white/10 rounded animate-pulse" />
@@ -621,23 +695,25 @@ const TouristProfileDashboard: React.FC = () => {
 
         {/* Tabs */}
         <div className="mb-6">
-          <div className="flex gap-2 border-b border-[#1A1A1A]/10 pb-2">
-            {(['all', 'destinations', 'products'] as TabType[]).map((tab) => (
+          <div className="flex gap-2 border-b border-black/10 pb-2">
+            {(['all', 'destinations', 'products', 'pinned'] as (TabType | 'pinned')[]).map((tab) => (
               <button
                 key={tab}
                 type="button"
-                onClick={() => setActiveTab(tab)}
+                onClick={() => setActiveTab(tab as TabType)}
                 className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
                   activeTab === tab
-                    ? 'bg-white/10 text-white border-b-2 border-white'
-                    : 'text-white/60 hover:text-white hover:bg-white/5'
+                    ? 'bg-black/10 text-black border-b-2 border-black'
+                    : 'text-black/60 hover:text-black hover:bg-black/5'
                 }`}
               >
                 {tab === 'all'
                   ? 'All'
                   : tab === 'destinations'
                   ? 'Destinations'
-                  : 'Products'}
+                  : tab === 'products'
+                  ? 'Products'
+                  : 'Pinned Events'}
               </button>
             ))}
           </div>
@@ -652,19 +728,102 @@ const TouristProfileDashboard: React.FC = () => {
                 key={i}
                 className="glass-secondary rounded-2xl p-4 flex gap-4 animate-pulse"
               >
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-[#1A1A1A]/10 shrink-0" />
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-black/10 shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 w-1/3 bg-white/10 rounded" />
-                  <div className="h-4 w-16 bg-white/10 rounded" />
-                  <div className="h-4 w-full bg-white/10 rounded" />
-                  <div className="h-3 w-24 bg-white/10 rounded" />
+                  <div className="h-5 w-1/3 bg-black/10 rounded" />
+                  <div className="h-4 w-16 bg-black/10 rounded" />
+                  <div className="h-4 w-full bg-black/10 rounded" />
+                  <div className="h-3 w-24 bg-black/10 rounded" />
                 </div>
               </div>
             ))
+          ) : activeTab === 'pinned' ? (
+            // Pinned Events View
+            pinnedEvents.length === 0 ? (
+              <div className="text-center py-12 text-black/60">
+                <svg
+                  className="h-16 w-16 mx-auto mb-4 text-black/30"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                  <polyline points="7 3 7 8 15 8" />
+                </svg>
+                <p className="text-lg">No pinned events yet</p>
+                <p className="text-sm mt-1">
+                  Visit the Events page and pin your favorite events here!
+                </p>
+              </div>
+            ) : (
+              pinnedEvents.map((event, index) => (
+                <motion.div
+                  key={event.id}
+                  {...getItemMotion(index)}
+                  className="glass-secondary rounded-2xl p-4 flex gap-4 relative hover:bg-black/5 transition-colors"
+                >
+                  {/* Calendar Icon */}
+                  <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl overflow-hidden shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <svg
+                      className="h-10 w-10 text-black"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+                    </svg>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    {/* Title */}
+                    <h4 className="font-semibold text-black truncate pr-16">{event.title}</h4>
+
+                    {/* Category Tag */}
+                    <span
+                      className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium capitalize ${
+                        event.category === 'festival'
+                          ? 'bg-purple-100 text-purple-700'
+                          : event.category === 'cultural'
+                          ? 'bg-blue-100 text-blue-700'
+                          : event.category === 'holiday'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
+                    >
+                      {event.category}
+                    </span>
+
+                    {/* Description */}
+                    {event.description && (
+                      <p className="text-sm text-black/70 mt-2 line-clamp-2">{event.description}</p>
+                    )}
+
+                    {/* Date & Municipality */}
+                    <div className="flex flex-col gap-1 mt-2 text-xs text-black/60">
+                      <div>
+                        <strong>Start:</strong> {formatDate(event.start_date)}
+                      </div>
+                      <div>
+                        <strong>Municipality:</strong> {event.municipality_name}
+                      </div>
+                      {event.location && (
+                        <div>
+                          <strong>Location:</strong> {event.location}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )
           ) : filteredRatings.length === 0 ? (
-            <div className="text-center py-12 text-white/60">
+            <div className="text-center py-12 text-black/60">
               <svg
-                className="h-16 w-16 mx-auto mb-4 text-white/30"
+                className="h-16 w-16 mx-auto mb-4 text-black/30"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -684,7 +843,7 @@ const TouristProfileDashboard: React.FC = () => {
               <motion.div
                 key={rating.id}
                 {...getItemMotion(index)}
-                className="glass-secondary rounded-2xl p-4 flex gap-4 relative hover:bg-white/5 transition-colors cursor-pointer"
+                className="glass-secondary rounded-2xl p-4 flex gap-4 relative hover:bg-black/5 transition-colors cursor-pointer"
                 onClick={() => handleRatingClick(rating)}
               >
                 {/* Image */}
@@ -698,7 +857,7 @@ const TouristProfileDashboard: React.FC = () => {
                   ) : (
                     <div className="w-full h-full bg-linear-to-br from-slate-700 to-slate-800 flex items-center justify-center">
                       <svg
-                        className="h-8 w-8 text-white/40"
+                        className="h-8 w-8 text-black/40"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -715,7 +874,7 @@ const TouristProfileDashboard: React.FC = () => {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   {/* Name */}
-                  <h4 className="font-semibold text-white truncate pr-16">{rating.itemName}</h4>
+                  <h4 className="font-semibold text-black truncate pr-16">{rating.itemName}</h4>
 
                   {/* Tag */}
                   <span
@@ -730,11 +889,11 @@ const TouristProfileDashboard: React.FC = () => {
 
                   {/* Comment */}
                   {rating.comment && (
-                    <p className="text-sm text-white/70 mt-2 line-clamp-2">{rating.comment}</p>
+                    <p className="text-sm text-black/70 mt-2 line-clamp-2">{rating.comment}</p>
                   )}
 
                   {/* Date */}
-                  <p className="text-xs text-white/50 mt-2">{formatDate(rating.createdAt)}</p>
+                  <p className="text-xs text-black/50 mt-2">{formatDate(rating.createdAt)}</p>
                 </div>
 
                 {/* Stars - Top Right */}

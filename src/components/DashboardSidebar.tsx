@@ -11,6 +11,7 @@ interface DashboardSidebarProps {
   fullName?: string | null;
   onOpenProductUpload: () => void;
   onOpenDestinationUpload: () => void;
+  onOpenEventUpload: () => void;
   onJumpToSection?: (sectionId: string) => void;
 }
 
@@ -22,6 +23,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   fullName,
   onOpenProductUpload,
   onOpenDestinationUpload,
+  onOpenEventUpload,
   onJumpToSection,
 }) => {
     const handleSectionJump = (sectionId: string) => {
@@ -324,6 +326,13 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             onClick={onOpenDestinationUpload}
           >
             Upload Destination
+          </button>
+          <button
+            type="button"
+            className="rounded-full glass-button border border-border px-4 py-2 text-sm font-semibold transition-colors"
+            onClick={onOpenEventUpload}
+          >
+            Add Event
           </button>
         </div>
         </div>
