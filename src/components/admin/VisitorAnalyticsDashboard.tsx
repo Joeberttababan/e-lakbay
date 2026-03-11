@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
   LineChart,
@@ -15,8 +16,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { TrendingUp, Users, Eye, Globe, Smartphone, Monitor, Clock, GitCompare, Loader } from 'lucide-react';
+import { TrendingUp, Users, Eye, Globe, Smartphone, Monitor, Clock, GitCompare, Loader, Link, BarChart3, Tablet } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
+import { AnalyticsDashboardSkeleton } from '../ui/Skeletons';
 
 interface MetricCardProps {
   title: string;
@@ -45,7 +47,60 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, trend, bgCo
   </div>
 );
 
+// Custom legend renderer for Traffic Sources
+const TrafficSourcesLegend = (props: any) => {
+  const { payload } = props;
+  if (!payload) return null;
+  
+  const iconMap: Record<string, React.ReactNode> = {
+    'Direct': <Globe className="w-4 h-4" />,
+    'Referral': <Link className="w-4 h-4" />,
+  };
+  
+  return (
+    <div className="flex flex-wrap gap-4 justify-center mt-4">
+      {payload.map((entry: any, index: number) => (
+        <div key={`legend-${index}`} className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+            {iconMap[entry.value] || <BarChart3 className="w-4 h-4" />}
+            <span className="text-sm text-black font-medium">{entry.value}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Custom legend renderer for Device Type
+const DeviceLegend = (props: any) => {
+  const { payload } = props;
+  if (!payload) return null;
+  
+  const deviceIconMap: Record<string, React.ReactNode> = {
+    'Mobile': <Smartphone className="w-4 h-4" />,
+    'Desktop': <Monitor className="w-4 h-4" />,
+    'Tablet': <Tablet className="w-4 h-4" />,
+  };
+  
+  return (
+    <div className="flex flex-wrap gap-4 justify-center mt-4">
+      {payload.map((entry: any, index: number) => (
+        <div key={`device-legend-${index}`} className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+            {deviceIconMap[entry.value] || <BarChart3 className="w-4 h-4" />}
+            <span className="text-sm text-black font-medium">{entry.value}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 export const VisitorAnalyticsDashboard: React.FC = () => {
+  const shouldReduceMotion = useReducedMotion();
+  
   // Fetch analytics events
   const { data: analyticsEvents = [], isLoading: isAnalyticsLoading } = useQuery({
     queryKey: ['visitor-analytics-events'],
@@ -462,60 +517,93 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
   });
 
   if (isAnalyticsLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin text-blue-500 mx-auto mb-2" />
-          <p className="text-black/60">Loading analytics...</p>
-        </div>
-      </div>
-    );
+    return <AnalyticsDashboardSkeleton />;
   }
 
   return (
     <div className="space-y-6">
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <MetricCard
-          title="Total Visitors"
-          value={totalMetrics.totalVisitors}
-          icon={<Users className="w-6 h-6" />}
-          trend={changes.totalVisitorsChange}
-          bgColor="bg-blue-500"
-        />
-        <MetricCard
-          title="Unique Visitors"
-          value={totalMetrics.totalUniqueVisitors}
-          icon={<Globe className="w-6 h-6" />}
-          trend={changes.visitorsChange}
-          bgColor="bg-green-500"
-        />
-        <MetricCard
-          title="Page Views"
-          value={totalMetrics.totalPageViews}
-          icon={<Eye className="w-6 h-6" />}
-          trend={changes.pageViewsChange}
-          bgColor="bg-purple-500"
-        />
-        <MetricCard
-          title="Avg Duration"
-          value={totalMetrics.avgVisitDuration}
-          icon={<Clock className="w-6 h-6" />}
-          trend={3.1}
-          bgColor="bg-orange-500"
-        />
-        <MetricCard
-          title="Bounce Rate"
-          value={totalMetrics.bounceRate}
-          icon={<TrendingUp className="w-6 h-6" />}
-          trend={changes.bounceRateChange}
-          bgColor="bg-red-500"
-        />
-      </div>
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+        animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0 }}
+        >
+          <MetricCard
+            title="Total Visitors"
+            value={totalMetrics.totalVisitors}
+            icon={<Users className="w-6 h-6" />}
+            trend={changes.totalVisitorsChange}
+            bgColor="bg-blue-500"
+          />
+        </motion.div>
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+        >
+          <MetricCard
+            title="Unique Visitors"
+            value={totalMetrics.totalUniqueVisitors}
+            icon={<Globe className="w-6 h-6" />}
+            trend={changes.visitorsChange}
+            bgColor="bg-green-500"
+          />
+        </motion.div>
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <MetricCard
+            title="Page Views"
+            value={totalMetrics.totalPageViews}
+            icon={<Eye className="w-6 h-6" />}
+            trend={changes.pageViewsChange}
+            bgColor="bg-purple-500"
+          />
+        </motion.div>
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+        >
+          <MetricCard
+            title="Avg Duration"
+            value={totalMetrics.avgVisitDuration}
+            icon={<Clock className="w-6 h-6" />}
+            trend={3.1}
+            bgColor="bg-orange-500"
+          />
+        </motion.div>
+        <motion.div
+          initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+          animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <MetricCard
+            title="Bounce Rate"
+            value={totalMetrics.bounceRate}
+            icon={<TrendingUp className="w-6 h-6" />}
+            trend={changes.bounceRateChange}
+            bgColor="bg-red-500"
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <motion.div 
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+        animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
         {/* Daily Visits Chart */}
         {dailyVisitsData.length > 0 && (
           <div className="lg:col-span-2 glass-secondary rounded-2xl p-6 border border-black/10">
@@ -538,12 +626,12 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
         {trafficSourcesData.length > 0 && (
           <div className="glass-secondary rounded-2xl p-6 border border-black/10">
             <h2 className="text-lg font-bold text-black mb-4">Traffic Sources</h2>
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={trafficSourcesData}
                   cx="50%"
-                  cy="50%"
+                  cy="40%"
                   labelLine={false}
                   label={({ name, value }) => `${name}: ${value}%`}
                   dataKey="value"
@@ -553,33 +641,40 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
                   ))}
                 </Pie>
                 <Tooltip />
+                <Legend content={<TrafficSourcesLegend />} />
               </PieChart>
             </ResponsiveContainer>
           </div>
         )}
-      </div>
+      </motion.div>
 
-      {/* Device Type */}
-      {deviceData.length > 0 && (
-        <div className="glass-secondary rounded-2xl p-6 border border-black/10">
-          <h2 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
-            <Smartphone className="w-5 h-5" /> Device Type Distribution
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={deviceData} cx="50%" cy="50%" labelLine={false} label={({ name, value }) => `${name}: ${value}%`} dataKey="value">
-                {deviceData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      )}
+      {/* Device Type & Browser Usage - Same Row on MD+ */}
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 gap-6"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+        animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+      >
+        {/* Device Type */}
+        {deviceData.length > 0 && (
+          <div className="glass-secondary rounded-2xl p-6 border border-black/10">
+            <h2 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+              <Smartphone className="w-5 h-5" /> Device Type Distribution
+            </h2>
+            <ResponsiveContainer width="100%" height={350}>
+              <PieChart>
+                <Pie data={deviceData} cx="50%" cy="40%" labelLine={false} label={({ name, value }) => `${name}: ${value}%`} dataKey="value">
+                  {deviceData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend content={<DeviceLegend />} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        )}
 
-      {/* Tables Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Browser Usage */}
         {browserData.length > 0 && (
           <div className="glass-secondary rounded-2xl p-6 border border-black/10">
@@ -601,10 +696,15 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Most Visited Destinations, Pages, and Products */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <motion.div 
+        className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+        animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
         {/* Top Visited Destinations */}
         <div className="glass-secondary rounded-2xl p-6 border border-black/10">
           <h2 className="text-lg font-bold text-black mb-4">Top Visited Destinations</h2>
@@ -673,7 +773,7 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

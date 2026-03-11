@@ -30,7 +30,7 @@ export const WeatherContainer: React.FC<WeatherContainerProps> = ({
 
     <div className={`${detailsOpen ? 'block' : 'hidden'} lg:block`}>
       <div className="flex items-center gap-3 sm:gap-4">
-        <WeatherIcon className="h-10 w-10 sm:h-16 sm:w-16 text-white/80" />
+        <WeatherIcon className="h-10 w-10 sm:h-16 sm:w-16 text-black/80" />
         {weatherLoading ? (
           <div>
             <div className="text-xl sm:text-4xl font-bold">--°C</div>

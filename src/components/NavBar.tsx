@@ -92,17 +92,17 @@ export const NavBar: React.FC<NavBarProps> = ({
   const navTextClass = isHome ? 'text-white' : 'text-black';
 
   return (
-    <nav className="absolute top-0 left-0 z-[60] w-full flex items-center justify-between px-4 py-1 md:px-8 md:py-4">
+    <nav className="absolute top-0 left-0 z-[60] w-full flex items-center justify-between px-3 py-1.5 sm:px-4 md:px-8 md:py-4">
       {/* Logo */}
-      <button type="button" className="select-none" onClick={onHome} aria-label="Go to homepage">
+      <button type="button" className="select-none flex-shrink-0" onClick={onHome} aria-label="Go to homepage">
         <img 
           src={isHome ? logoWhite : logoBlack} 
           alt="E-Lakbay" 
-          className="h-7 md:h-14 w-auto opacity-90"
+          className="h-6 sm:h-7 md:h-14 w-auto opacity-90"
         />
       </button>
       {/* Navigation Items */}
-      <div className="hidden md:flex items-center gap-6">
+      <div className="hidden md:flex items-center gap-4 lg:gap-6 text-sm lg:text-base">
         <button
           type="button"
           onClick={() => handleSectionJump('top-destinations')}
@@ -136,7 +136,7 @@ export const NavBar: React.FC<NavBarProps> = ({
           onClick={() => navigate('/wildlife')}
           className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70', isWildlifeActive && activeLinkClass)}
         >
-          Wildlife Conservation
+          Wildlife
         </button>
         <button
           type="button"
@@ -145,40 +145,40 @@ export const NavBar: React.FC<NavBarProps> = ({
             setIsMenuOpen(false);
           }}
           className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
-          aria-label="View visitor analytics"
+          aria-label="View analytics"
         >
-          Visitors
+          Analytics
         </button>
         {!isAuthenticated ? (
           <>
             <Button
               variant={active === 'login' ? 'default' : 'outline'}
-              className={cn('text-black rounded-full px-5 py-2 font-medium transition-colors', active === 'login' ? 'shadow-md' : '')}
+              className={cn('!text-black rounded-full px-3 sm:px-4 lg:px-5 py-2 font-medium transition-colors text-sm', active === 'login' ? 'shadow-md' : '')}
               onClick={() => handleAuthClick('login')}
             >
               Log In
             </Button>
             <Button
               variant={active === 'signup' ? 'default' : 'outline'}
-              className={cn('text-black rounded-full px-5 py-2 font-medium transition-colors', active === 'signup' ? 'shadow-md' : '')}
+              className={cn('!text-black rounded-full px-3 sm:px-4 lg:px-5 py-2 font-medium transition-colors text-sm', active === 'signup' ? 'shadow-md' : '')}
               onClick={() => handleAuthClick('signup')}
             >
               Sign Up
             </Button>
           </>
         ) : (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             <button
               type="button"
               onClick={onDashboard}
-              className="px-4 py-2 rounded-full glass-button text-sm font-semibold transition-colors"
+              className="px-3 lg:px-4 py-2 rounded-full glass-button text-xs lg:text-sm font-semibold transition-colors"
               aria-label="Open dashboard"
             >
               {displayName}
             </button>
             <Button
               variant="outline"
-              className="rounded-full px-5 py-2 font-medium transition-colors text-black"
+              className="rounded-full px-3 lg:px-5 py-2 font-medium transition-colors !text-black text-sm"
               onClick={() => setIsLogoutOpen(true)}
             >
               Log Out
@@ -190,13 +190,13 @@ export const NavBar: React.FC<NavBarProps> = ({
       <button
         ref={menuButtonRef}
         type="button"
-        className={cn('md:hidden inline-flex items-center justify-center rounded-full p-2 transition-colors', isHome ? 'text-white hover:text-white/70 hover:bg-white/10' : 'text-black/90 hover:text-black hover:bg-black/10')}
+        className={cn('md:hidden inline-flex items-center justify-center rounded-full p-2 transition-colors flex-shrink-0', isHome ? 'text-white hover:text-white/70 hover:bg-white/10' : 'text-black/90 hover:text-black hover:bg-black/10')}
         aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={isMenuOpen}
         onClick={() => setIsMenuOpen((prev) => !prev)}
       >
         <svg
-          className="h-6 w-6"
+          className="h-5 w-5 sm:h-6 sm:w-6"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -211,15 +211,15 @@ export const NavBar: React.FC<NavBarProps> = ({
       <div
         ref={mobileMenuRef}
         className={cn(
-          'md:hidden absolute left-4 right-4 mt-52 rounded-2xl glass-secondary border border-white/20 overflow-hidden transition-all',
-          isMenuOpen ? 'opacity-100 translate-y-0' : 'pointer-events-none opacity-0 -translate-y-2'
+          'md:hidden fixed top-16 left-3 right-3 sm:left-4 sm:right-4 rounded-lg sm:rounded-2xl glass-secondary border border-white/20 overflow-hidden transition-all shadow-lg',
+          isMenuOpen ? 'opacity-100 translate-y-0 visible' : 'pointer-events-none opacity-0 -translate-y-2 invisible'
         )}
       >
-        <div className={cn("relative flex flex-col gap-2 px-4 py-4", isHome ? 'text-white' : 'text-black')}>
+        <div className="relative flex flex-col gap-2 px-3 sm:px-4 py-3 sm:py-4 text-black max-h-[calc(100vh-80px)] overflow-y-auto">
           <button
             type="button"
             onClick={() => setIsMenuOpen(false)}
-            className={cn("absolute right-3 top-3 inline-flex items-center justify-center rounded-full p-2 transition-colors", isHome ? 'text-white hover:text-white/70 hover:bg-white/10' : 'text-black/90 hover:text-black hover:bg-black/10')}
+            className="absolute right-2 top-2 sm:right-3 sm:top-3 inline-flex items-center justify-center rounded-full p-1 transition-colors text-black/90 hover:text-black hover:bg-black/10"
             aria-label="Close navigation menu"
           >
             <svg
@@ -238,9 +238,8 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('top-destinations')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide transition-colors',
-              isHome ? 'hover:text-white/70' : 'hover:text-black/70',
-              isDestinationsActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold')
+              'text-left text-sm font-medium tracking-wide transition-colors text-black hover:text-black/70 pt-2',
+              isDestinationsActive && 'text-black font-semibold'
             )}
           >
             Destinations
@@ -249,9 +248,8 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('products')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide transition-colors',
-              isHome ? 'hover:text-white/70' : 'hover:text-black/70',
-              isProductsActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold')
+              'text-left text-sm font-medium tracking-wide transition-colors text-black hover:text-black/70',
+              isProductsActive && 'text-black font-semibold'
             )}
           >
             Products
@@ -260,9 +258,8 @@ export const NavBar: React.FC<NavBarProps> = ({
             type="button"
             onClick={() => handleSectionJump('municipalities')}
             className={cn(
-              'text-left text-sm font-medium tracking-wide transition-colors',
-              isHome ? 'hover:text-white/70' : 'hover:text-black/70',
-              isMunicipalitiesActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold')
+              'text-left text-sm font-medium tracking-wide transition-colors text-black hover:text-black/70',
+              isMunicipalitiesActive && 'text-black font-semibold'
             )}
           >
             Municipalities
@@ -273,7 +270,7 @@ export const NavBar: React.FC<NavBarProps> = ({
               onNavigateEvents?.();
               setIsMenuOpen(false);
             }}
-            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+            className="text-left text-sm font-medium tracking-wide transition-colors text-black hover:text-black/70"
           >
             Events
           </button>
@@ -283,7 +280,7 @@ export const NavBar: React.FC<NavBarProps> = ({
               navigate('/wildlife');
               setIsMenuOpen(false);
             }}
-            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70', isWildlifeActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold'))}
+            className={cn('text-left text-sm font-medium tracking-wide transition-colors text-black hover:text-black/70', isWildlifeActive && 'text-black font-semibold')}
           >
             Wildlife Conservation
           </button>
@@ -293,23 +290,24 @@ export const NavBar: React.FC<NavBarProps> = ({
               navigate('/analytics');
               setIsMenuOpen(false);
             }}
-            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
-            aria-label="View visitor analytics"
+            className="text-left text-sm font-medium tracking-wide transition-colors text-black hover:text-black/70"
+            aria-label="View analytics"
           >
-            Visitors
+            Analytics
           </button>
+          <div className="border-t border-black/10 my-2" />
           {!isAuthenticated ? (
             <>
               <Button
                 variant={active === 'login' ? 'default' : 'outline'}
-                className={cn('rounded-full px-4 py-2 text-sm font-medium transition-colors', active === 'login' ? 'shadow-md' : '')}
+                className={cn('rounded-full px-4 py-2 text-xs sm:text-sm font-medium transition-colors !text-black w-full', active === 'login' ? 'shadow-md' : '')}
                 onClick={() => handleAuthClick('login')}
               >
                 Log In
               </Button>
               <Button
                 variant={active === 'signup' ? 'default' : 'outline'}
-                className={cn('rounded-full px-4 py-2 text-sm font-medium transition-colors', active === 'signup' ? 'shadow-md' : '')}
+                className={cn('rounded-full px-4 py-2 text-xs sm:text-sm font-medium transition-colors !text-black w-full', active === 'signup' ? 'shadow-md' : '')}
                 onClick={() => handleAuthClick('signup')}
               >
                 Sign Up
@@ -323,13 +321,13 @@ export const NavBar: React.FC<NavBarProps> = ({
                   onDashboard();
                   setIsMenuOpen(false);
                 }}
-                className="flex items-center gap-3 text-sm font-medium"
+                className="flex items-center gap-3 text-xs sm:text-sm font-medium text-black py-2"
               >
-                <span className="font-semibold">{displayName}</span>
+                <span className="font-semibold truncate">{displayName}</span>
               </button>
               <Button
                 variant="outline"
-                className="rounded-full px-4 py-2 text-sm font-medium transition-colors text-black"
+                className="rounded-full px-4 py-2 text-xs sm:text-sm font-medium transition-colors !text-black w-full"
                 onClick={() => {
                   setIsLogoutOpen(true);
                   setIsMenuOpen(false);
@@ -344,34 +342,34 @@ export const NavBar: React.FC<NavBarProps> = ({
 
       {isLogoutOpen && (
         <div
-          className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-4"
+          className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4 py-6"
           role="presentation"
           onClick={() => setIsLogoutOpen(false)}
         >
           <div
-            className="glass-secondary rounded-2xl p-6 w-full max-w-sm text-black max-h-[85vh] md:max-h-none overflow-y-auto hide-scrollbar"
+            className="glass-secondary rounded-lg sm:rounded-2xl p-4 sm:p-6 w-full max-w-xs sm:max-w-sm text-black"
             role="dialog"
             aria-modal="true"
             aria-labelledby="logout-title"
             onClick={(event) => event.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold" id="logout-title">
+            <h3 className="text-base sm:text-lg font-semibold" id="logout-title">
               Log out of your account?
             </h3>
-            <p className="text-sm text-black/80 mt-2">
+            <p className="text-xs sm:text-sm text-black/80 mt-2">
               You can log back in anytime.
             </p>
-            <div className="mt-5 flex items-center justify-end gap-3">
+            <div className="mt-4 sm:mt-5 flex items-center justify-end gap-2 sm:gap-3">
               <button
                 type="button"
-                className="text-sm text-black/80 hover:text-white"
+                className="text-xs sm:text-sm text-black/80 hover:text-white hover:bg-black/20 px-3 sm:px-4 py-2 rounded transition-colors"
                 onClick={() => setIsLogoutOpen(false)}
               >
                 Cancel
               </button>
               <Button
                 variant="default"
-                className="rounded-full px-4 py-2 text-sm font-medium"
+                className="rounded-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
                 onClick={() => {
                   setIsLogoutOpen(false);
                   onLogout();

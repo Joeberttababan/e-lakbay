@@ -103,3 +103,80 @@ export const ProfileChipSkeleton: React.FC = () => (
     <Skeleton className="h-3 w-12 rounded-full" />
   </div>
 );
+
+export const AnalyticsDashboardSkeleton: React.FC = () => (
+  <div className="space-y-6">
+    {/* Key Metrics */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {Array.from({ length: 5 }).map((_, index) => (
+        <div key={`metric-skeleton-${index}`} className="glass-secondary rounded-2xl p-5 border border-black/10">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <Skeleton className="h-3 w-24 rounded-full mb-2" />
+              <Skeleton className="h-8 w-32 rounded-full mb-3" />
+            </div>
+            <Skeleton className="h-12 w-12 rounded-lg" />
+          </div>
+          <Skeleton className="h-2 w-20 rounded-full" />
+        </div>
+      ))}
+    </div>
+
+    {/* Daily Visits Chart */}
+    <div className="glass-secondary rounded-2xl p-5 border border-black/10">
+      <Skeleton className="h-4 w-40 rounded-full mb-4" />
+      <Skeleton className="h-80 w-full rounded-xl" />
+    </div>
+
+    {/* Traffic Sources and Device Type Row */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Traffic Sources Pie */}
+      <div className="glass-secondary rounded-2xl p-5 border border-black/10">
+        <Skeleton className="h-4 w-40 rounded-full mb-4" />
+        <Skeleton className="h-64 w-full rounded-xl mx-auto" />
+      </div>
+
+      {/* Device Type Pie */}
+      <div className="glass-secondary rounded-2xl p-5 border border-black/10">
+        <Skeleton className="h-4 w-40 rounded-full mb-4" />
+        <Skeleton className="h-64 w-full rounded-xl mx-auto" />
+      </div>
+    </div>
+
+    {/* Browser and Destinations/Products Row */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Browser Chart */}
+      <div className="glass-secondary rounded-2xl p-5 border border-black/10">
+        <Skeleton className="h-4 w-40 rounded-full mb-4" />
+        <Skeleton className="h-80 w-full rounded-xl" />
+      </div>
+
+      {/* Top Destinations and Products */}
+      <div className="space-y-4">
+        <div className="glass-secondary rounded-2xl p-5 border border-black/10">
+          <Skeleton className="h-4 w-40 rounded-full mb-4" />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={`dest-skeleton-${index}`} className="flex justify-between items-center">
+                <Skeleton className="h-3 w-32 rounded-full" />
+                <Skeleton className="h-3 w-16 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="glass-secondary rounded-2xl p-5 border border-black/10">
+          <Skeleton className="h-4 w-40 rounded-full mb-4" />
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={`prod-skeleton-${index}`} className="flex justify-between items-center">
+                <Skeleton className="h-3 w-32 rounded-full" />
+                <Skeleton className="h-3 w-16 rounded-full" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);

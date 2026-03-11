@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 interface DashboardSidebarProps {
   displayName: string;
   battleCry: string;
+  description?: string | null;
   imgUrl?: string | null;
   userId?: string | null;
   fullName?: string | null;
@@ -19,6 +20,7 @@ interface DashboardSidebarProps {
 export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   displayName,
   battleCry,
+  description,
   imgUrl,
   userId,
   fullName,
@@ -38,6 +40,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(fullName || displayName);
   const [battleInput, setBattleInput] = useState(battleCry);
+  const [descriptionInput, setDescriptionInput] = useState(description || '');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,8 +53,9 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     if (!isEditing) {
       setNameInput(fullName || displayName);
       setBattleInput(battleCry);
+      setDescriptionInput(description || '');
     }
-  }, [battleCry, displayName, fullName, isEditing]);
+  }, [battleCry, description, displayName, fullName, isEditing]);
 
   useEffect(() => {
     return () => {
@@ -157,6 +161,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         .update({
           full_name: nameInput.trim() || null,
           battle_cry: battleInput.trim() || null,
+          description: descriptionInput.trim() || null,
           img_url: avatarUrl,
         })
         .eq('id', userId);
@@ -206,20 +211,20 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
       <aside
         id="dashboard-sidebar"
-        className={`lg:w-72 w-[78%] sm:w-[60%] lg:static lg:translate-x-0 fixed left-0 top-0 bottom-0 z-40 transition-transform duration-300 lg:sticky lg:top-24 lg:self-start ${
+        className={`lg:w-80 w-64 sm:w-72 lg:static lg:translate-x-0 fixed left-0 top-0 bottom-0 z-40 transition-transform duration-300 lg:sticky lg:top-24 lg:self-start ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="glass-secondary border border-border rounded-2xl lg:rounded-2xl rounded-l-none p-4 sm:p-5 h-full w-full lg:h-[calc(100vh-6rem)] overflow-y-auto hide-scrollbar flex flex-col relative text-black">
-          <div ref={profileCardRef} className="mt-2 glass-secondary border border-border rounded-2xl p-4 sm:p-5 relative flex-shrink-0">
-            <div className="flex flex-col items-center text-center gap-3 mb-4">
+        <div className="glass-secondary border border-border rounded-2xl lg:rounded-2xl rounded-l-none mt-10 sm:mt-24 lg:mt-0 p-3 sm:p-4 md:p-5 h-screen lg:h-[calc(80vh-6rem)] overflow-y-auto hide-scrollbar flex flex-col relative text-black">
+          <div ref={profileCardRef} className="mt-1 glass-secondary border border-border rounded-lg sm:rounded-xl lg:rounded-2xl p-3 sm:p-4 md:p-5 relative flex-shrink-0">
+            <div className="flex flex-col items-center text-center gap-2 sm:gap-3 mb-3 sm:mb-4">
               <button
                 type="button"
                 onClick={handleSelectAvatar}
                 disabled={!isEditing}
-                className={`h-32 sm:h-40 w-32 sm:w-40 rounded-full border border-border bg-card/60 overflow-hidden flex items-center justify-center relative flex-shrink-0 ${
-                  isEditing ? 'group cursor-pointer' : 'cursor-default'
-                }`}
+                className={`h-24 sm:h-28 md:h-32 lg:h-36 w-24 sm:w-28 md:w-32 lg:w-36 rounded-full border-2 border-border bg-card/60 overflow-hidden flex items-center justify-center relative flex-shrink-0 ${
+                  isEditing ? 'group cursor-pointer hover:opacity-80' : 'cursor-default'
+                } transition-opacity`}
               >
                 {displayAvatar ? (
                   <img src={displayAvatar} alt={displayName} className="h-full w-full object-cover" />
@@ -288,8 +293,22 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                     className="rounded-lg bg-background/70 border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   />
                 </div>
+                <div className="flex flex-col gap-1 text-left">
+                  <label className="text-xs text-black/70">Description <span className="text-black/50 font-normal">({descriptionInput.length}/2200)</span></label>
+                  <textarea
+                    placeholder="Tell us more about your municipality..."
+                    value={descriptionInput}
+                    onChange={(event) => {
+                      if (event.target.value.length <= 2200) {
+                        setDescriptionInput(event.target.value);
+                      }
+                    }}
+                    rows={4}
+                    className="rounded-lg bg-background/70 border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  />
+                </div>
                 {error && (
-                  <div className="text-xs text-red-200 bg-red-500/20 border border-red-200/30 rounded px-3 py-2">
+                  <div className="text-xs text-black bg-red-500/20 border border-red-200/30 rounded px-3 py-2">
                     {error}
                   </div>
                 )}
@@ -305,9 +324,9 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             )}
           </div>
 
-          <div className="mt-4 sm:mt-6 flex-1 min-h-0">
-            <p className="text-xs uppercase tracking-[0.2em] text-black/70">Dashboard</p>
-            <nav className="mt-3 sm:mt-4 flex flex-col gap-2 text-xs sm:text-sm">
+          <div className="mt-3 sm:mt-4 md:mt-6 flex-1 min-h-0">
+            <p className="text-[10px] sm:text-xs md:text-sm uppercase tracking-[0.15em] text-black/70 font-semibold">Dashboard</p>
+            <nav className=" mt-2 sm:mt-3 md:mt-4 flex flex-col gap-1 sm:gap-2 text-xs sm:text-sm md:text-base">
               <button
                 type="button"
                 onClick={() => handleSectionJump('analytics-overview')}
@@ -338,31 +357,31 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               </button>
             </nav>
 
-            <div className="mt-2 sm:mt-4 border-t border-border pt-2 sm:pt-3 flex flex-col gap-2 sm:gap-3">
+            <div className="mt-2 sm:mt-3 md:mt-4 border-t border-border pt-2 sm:pt-3 md:pt-4 flex flex-col gap-1.5 sm:gap-2 md:gap-3">
               <button
                 type="button"
-                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-xs sm:text-sm md:text-base font-semibold transition-colors hover:bg-black/5 w-full"
                 onClick={onOpenProductUpload}
               >
                 Upload Product
               </button>
               <button
                 type="button"
-                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-xs sm:text-sm md:text-base font-semibold transition-colors hover:bg-black/5 w-full"
                 onClick={onOpenDestinationUpload}
               >
                 Upload Destination
               </button>
               <button
                 type="button"
-                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-xs sm:text-sm md:text-base font-semibold transition-colors hover:bg-black/5 w-full"
                 onClick={onOpenEventUpload}
               >
                 Add Event
               </button>
               <button
                 type="button"
-                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 text-xs sm:text-sm md:text-base font-semibold transition-colors hover:bg-black/5 w-full"
                 onClick={onOpenWildlifeUpload}
               >
                 Upload Wildlife

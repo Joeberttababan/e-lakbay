@@ -12,6 +12,9 @@ export interface Profile {
   img_url: string | null;
   battle_cry: string | null;
   municipality_name: string | null;
+  nationality?: string | null;
+  contact_number?: string | null;
+  gender?: string | null;
 }
 
 interface AuthContextValue {
@@ -20,7 +23,14 @@ interface AuthContextValue {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
   signInWithGoogle: () => Promise<string | null>;
-  signUp: (email: string, password: string, fullName: string) => Promise<string | null>;
+  signUp: (
+    email: string,
+    password: string,
+    fullName: string,
+    nationality?: string,
+    contactNumber?: string,
+    gender?: string
+  ) => Promise<string | null>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -230,7 +240,14 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
     return null;
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+  const signUp = useCallback(async (
+    email: string,
+    password: string,
+    fullName: string,
+    nationality?: string,
+    contactNumber?: string,
+    gender?: string
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
@@ -258,6 +275,9 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
           id: userId,
           full_name: fullName.trim() || null,
           email: data.user?.email ?? null,
+          nationality: nationality?.trim() || null,
+          contact_number: contactNumber?.trim() || null,
+          gender: gender || null,
         });
 
       if (profileError) {

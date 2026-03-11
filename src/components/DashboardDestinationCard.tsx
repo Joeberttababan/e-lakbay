@@ -33,23 +33,19 @@ import { toast } from 'sonner';
 
 const preloadedDestinationGalleryKeys = new Set<string>();
 
-interface DestinationModalCardProps {
+interface DashboardDestinationCardProps {
   id?: string;
   title: string;
   description: string;
   imageUrl: string;
   imageUrls?: string[];
-  meta?: string;
   postedBy?: string;
   postedByImageUrl?: string | null;
   postedById?: string | null;
   ratingAvg?: number;
   ratingCount?: number;
-  onRate?: () => void;
-  onProfileClick?: (profileId: string) => void;
   location?: LocationData;
-  isCard?: boolean;
-  showEditControl?: boolean;
+  onProfileClick?: (profileId: string) => void;
 }
 
 const formatRating = (ratingAvg?: number, ratingCount?: number) => {
@@ -90,27 +86,23 @@ const toTitleCase = (value: string) =>
     .map((word) => (word ? word[0].toUpperCase() + word.slice(1).toLowerCase() : word))
     .join(' ');
 
-export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
+export const DashboardDestinationCard: React.FC<DashboardDestinationCardProps> = ({
   id,
   title,
   description,
   imageUrl,
   imageUrls,
-  meta,
   postedBy = 'Tourism Office',
   postedByImageUrl,
   postedById,
   ratingAvg,
   ratingCount,
-  onRate,
-  onProfileClick,
   location,
-  isCard = false,
-  showEditControl = false,
+  onProfileClick,
 }) => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const canEdit = Boolean(showEditControl && id && user?.id && postedById && user.id === postedById);
+  const canEdit = Boolean(id && user?.id && postedById && user.id === postedById);
   const formattedTitle = useMemo(() => toTitleCase(title), [title]);
   const images = useMemo(() => {
     if (imageUrls && imageUrls.length > 0) {
@@ -135,9 +127,9 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
   const [weather, setWeather] = useState<CurrentWeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState<string | null>(null);
+  const [showComments, setShowComments] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const municipalityName = location?.municipality?.trim() ?? '';
   const hasLocation = Boolean(location && typeof location.lat === 'number' && typeof location.lng === 'number');
   const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
@@ -381,15 +373,13 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
                 setIsDeleting(false);
               }
             }}
-                className="rounded-full bg-black/10 border border-black/20 p-2 text-black hover:bg-black/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="rounded-full bg-black/10 border border-black/20 p-2 text-black hover:bg-black/20 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             aria-label="Delete destination"
           >
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
-      ) : (
-        meta && <span className="text-[10px] sm:text-xs text-black/60">{meta}</span>
-      )}
+      ) : null}
     </header>
   );
 
@@ -461,7 +451,7 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
 
   const footerActions = (
     <FooterActionsContainer
-      onRate={onRate}
+      onRate={undefined}
       hasLocation={Boolean(location)}
       onViewRoutes={() => {
         if (!location) return;
@@ -474,7 +464,7 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
   );
 
   return (
-    <article className={`relative glass-secondary modal-stone-text border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col w-full overflow-hidden ${isCard ? 'h-[60vh]' : 'h-[65vh] sm:h-[55vh] md:h-[75vh] lg:h-[65vh]'}`}>
+    <article className="relative glass-secondary modal-stone-text border border-white/10 rounded-2xl p-4 sm:p-6 flex flex-col w-full overflow-hidden h-[60vh]">
       {/* Comments toggle button on right edge */}
       {id && !showComments && (
         <CommentsToggleButton
@@ -484,12 +474,6 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
       )}
       <div
         className="flex-1 min-h-0 overflow-y-auto hide-scrollbar overscroll-contain touch-pan-y flex flex-col gap-2"
-        onWheelCapture={(event) => {
-          event.stopPropagation();
-        }}
-        onTouchMoveCapture={(event) => {
-          event.stopPropagation();
-        }}
       >
         {headerSection}
         {mediaAndWeatherSection}
@@ -497,6 +481,30 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
         {descriptionSection}
       </div>
       {footerActions}
+
+      {showComments && id && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 py-8"
+          role="presentation"
+          onClick={() => setShowComments(false)}
+        >
+          <div
+            className="max-w-2xl w-full max-h-[70vh] rounded-2xl overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <CommentsSlider
+              open={showComments}
+              onClose={() => setShowComments(false)}
+              itemId={id}
+              itemType="destination"
+              itemName={formattedTitle}
+              onProfileClick={onProfileClick}
+            />
+          </div>
+        </div>
+      )}
 
       {canEdit && (
         <DestinationUploadModal
@@ -511,18 +519,6 @@ export const DestinationModalCard: React.FC<DestinationModalCardProps> = ({
             imageUrls,
             location,
           }}
-        />
-      )}
-
-      {/* Comments Slider - inside modal */}
-      {id && (
-        <CommentsSlider
-          open={showComments}
-          onClose={() => setShowComments(false)}
-          itemId={id}
-          itemType="destination"
-          itemName={formattedTitle}
-          onProfileClick={onProfileClick}
         />
       )}
     </article>

@@ -2,11 +2,11 @@ import React, { useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { DestinationModalCardSkeleton, SkeletonList } from '../components/ui/Skeletons';
-import { DestinationModalCard } from '../components/DestinationModalCard';
+import { DestinationTileSkeleton, SkeletonList } from '../components/ui/Skeletons';
+import { DashboardDestinationCard } from '../components/DashboardDestinationCard';
 import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
-
+                                                                                                                  
 interface DashboardDestinationSectionProps {
   onRate?: (name: string) => void;
   userId?: string | null;
@@ -163,12 +163,12 @@ export const DashboardDestinationSection: React.FC<DashboardDestinationSectionPr
         {showDestinationSkeletons ? (
           <SkeletonList
             count={1}
-            render={(index) => <DestinationModalCardSkeleton key={`destination-card-skeleton-${index}`} />}
+            render={(index) => <DestinationTileSkeleton key={`destination-card-skeleton-${index}`} />}
           />
         ) : (
           visibleDestinations.map((destination, index) => (
             <motion.div key={destination.id} {...getItemMotion(index)}>
-              <DestinationModalCard
+              <DashboardDestinationCard
                 id={destination.id}
                 title={destination.name}
                 description={destination.description ?? ''}
@@ -180,9 +180,6 @@ export const DashboardDestinationSection: React.FC<DashboardDestinationSectionPr
                 ratingAvg={destination.ratingAvg}
                 ratingCount={destination.ratingCount}
                 location={destination.location}
-                onRate={onRate ? () => onRate(destination.name) : undefined}
-                isCard={true}
-                showEditControl
               />
             </motion.div>
           ))

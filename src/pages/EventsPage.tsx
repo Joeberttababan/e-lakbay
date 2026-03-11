@@ -3,6 +3,14 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 import { toast } from 'sonner';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '../components/modern-ui/breadcrumb';
 
 interface Event {
   id: string;
@@ -171,23 +179,27 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
         className="relative px-4 sm:px-6 lg:px-10 mb-12"
       >
         <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              type="button"
-              onClick={onBackHome}
-              className="inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-black/10 transition-colors"
-              aria-label="Back to home"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                strokeWidth="2"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
+          {/* Breadcrumb */}
+          <div className="flex justify-start mb-6">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink
+                    href="#"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      onBackHome();
+                    }}
+                  >
+                    Home
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Events</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-2">
             Events & Festivals

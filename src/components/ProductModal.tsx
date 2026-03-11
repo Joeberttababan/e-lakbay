@@ -5,7 +5,6 @@ import { Pencil, Star, Trash2 } from 'lucide-react';
 import { Avatar } from './Avatar';
 import { useAuth } from './AuthProvider';
 import { CommentsSlider, CommentsToggleButton } from './CommentsSlider';
-import ViewRoutesModal from './ViewRoutesModal';
 import type { LocationData } from '../lib/locationTypes';
 import { preloadImageUrl } from '../lib/imagePreloadCache';
 import { supabase } from '../lib/supabaseClient';
@@ -109,7 +108,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     setIsTransitioning(false);
     setIsImageLoading(false);
     setIsGalleryReady(false);
-    setShowRoutes(false);
   }, [open, product]);
 
   const formatRating = (ratingAvg?: number, ratingCount?: number) => {
@@ -466,15 +464,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
                 {(onRate || hasLocation) && (
                   <div className="mt-auto flex flex-wrap justify-end gap-2">
-                    {hasLocation && (
-                      <button
-                        type="button"
-                        onClick={() => setShowRoutes(true)}
-                        className="rounded-full bg-white/10 border border-white/20 px-4 py-2 text-sm font-semibold hover:bg-white/20 transition-colors"
-                      >
-                        View Routes
-                      </button>
-                    )}
                     {onRate && (
                       <button
                         type="button"
@@ -500,9 +489,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             />
           </article>
         </div>
-        {showRoutes && localProduct.location && (
-          <ViewRoutesModal destination={localProduct.location} onClose={() => setShowRoutes(false)} />
-        )}
       </div>
     </>
   );

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
 import { Avatar } from './Avatar';
-import ViewRoutesModal from './ViewRoutesModal';
 import type { LocationData } from '../lib/locationTypes';
 
 interface ProductCardProps {
@@ -124,30 +123,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           )}
           {(onRate || hasLocation) && (
             <div className="mt-3 flex flex-wrap justify-end gap-2">
-              {hasLocation && (
-                onClick ? (
-                  <span
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setShowRoutes(true);
-                    }}
-                    className="rounded-full glass-button px-4 py-2 text-sm font-semibold transition-colors cursor-pointer"
-                  >
-                    View Routes
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setShowRoutes(true);
-                    }}
-                    className="rounded-full glass-button px-4 py-2 text-sm font-semibold transition-colors"
-                  >
-                    View Routes
-                  </button>
-                )
-              )}
               {onRate && (
                 onClick ? (
                   <span
@@ -186,9 +161,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <button type="button" onClick={onClick} className={wrapperClassName}>
           {content}
         </button>
-        {showRoutes && location && (
-          <ViewRoutesModal destination={location} onClose={() => setShowRoutes(false)} />
-        )}
       </>
     );
   }
@@ -196,9 +168,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <>
       <div className={cardClassName}>{content}</div>
-      {showRoutes && location && (
-        <ViewRoutesModal destination={location} onClose={() => setShowRoutes(false)} />
-      )}
     </>
   );
 };

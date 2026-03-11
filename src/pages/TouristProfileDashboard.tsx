@@ -492,8 +492,11 @@ const TouristProfileDashboard: React.FC = () => {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink
-                onClick={() => navigate('/')}
-                className="cursor-pointer text-black/70 hover:text-black transition-colors"
+                href="#"
+                onClick={(event) => {
+                  event.preventDefault();
+                  navigate('/');
+                }}
               >
                 Home
               </BreadcrumbLink>

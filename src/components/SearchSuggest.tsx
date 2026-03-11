@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { trackSearchPerformed } from '../lib/analytics';
 import { useAuth } from './AuthProvider';
@@ -206,19 +207,7 @@ export const GroupedSearchSuggest: React.FC<GroupedSearchSuggestProps> = ({
     <form onSubmit={handleSubmit} className={cn('relative w-full max-w-xl', className)}>
       <div className="glass-secondary rounded-full flex items-center gap-3 px-4 sm:px-6 py-1.5 text-[#1A1A1A] border border-white/10">
         {/* Search icon */}
-        <svg
-          className="h-5 w-5 text-white/60 shrink-0"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          />
-        </svg>
+        <Search className="h-5 w-5 text-black shrink-0" />
 
         <input
           type="text"

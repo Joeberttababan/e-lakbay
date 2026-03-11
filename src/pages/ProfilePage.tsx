@@ -30,6 +30,7 @@ interface ProfileInfo {
   email?: string | null;
   imageUrl?: string | null;
   battleCry?: string | null;
+  description?: string | null;
 }
 
 interface DestinationItem {
@@ -113,7 +114,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
       try {
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, full_name, email, img_url, battle_cry')
+          .select('id, full_name, email, img_url, battle_cry, description')
           .eq('id', profileId)
           .single();
 
@@ -127,6 +128,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
           email: data.email ?? null,
           imageUrl: data.img_url ?? null,
           battleCry: data.battle_cry ?? null,
+          description: data.description ?? null,
         } as ProfileInfo;
       } catch (fetchError) {
         console.error('Failed to load profile:', fetchError);
@@ -303,7 +305,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
             <ProfileHeaderSkeleton />
           ) : (
             <div className="flex items-flex-start gap-4 min-w-0">
-              <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full border border-border bg-card/60  flex items-center justify-center text-lg font-semibold flex-shrink-0">
+              <div className="h-16 w-16 md:h-36 sm:w-36 rounded-full border border-border bg-card/60  flex items-center justify-center text-lg font-semibold flex-shrink-0">
                 {profileInfo?.imageUrl ? (
                   <img src={profileInfo.imageUrl} alt={displayName} className="h-full w-full object-cover" />
                 ) : (
@@ -313,6 +315,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
               <div className="min-w-0 flex-1">
                 <h1 className="text-2xl sm:text-3xl font-semibold break-words whitespace-normal">{displayName}</h1>
                 {profileInfo?.battleCry && <p className="text-sm text-black/70 mt-1 break-words whitespace-normal">{profileInfo.battleCry}</p>}
+                {profileInfo?.description && <p className="text-sm text-black/70 mt-2 break-words whitespace-normal">{profileInfo.description}</p>}
               </div>
             </div>
           )}

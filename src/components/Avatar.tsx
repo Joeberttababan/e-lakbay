@@ -18,7 +18,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   asButton = true,
 }) => {
   const initial = name ? name.charAt(0).toUpperCase() : '?';
-  const sharedClassName = `inline-flex items-center justify-center rounded-full overflow-hidden border border-white/20 bg-white/10 ${sizeClassName} ${className}`;
+  const sharedClassName = `inline-flex items-center justify-center rounded-full overflow-hidden border border-black/20 bg-black/30 ${sizeClassName} ${className}`;
 
   if (onClick && asButton) {
     return (
@@ -31,7 +31,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
         ) : (
-          <span className="text-[10px] font-semibold text-white/80">{initial}</span>
+          <span className="text-[10px] font-semibold text-white/90">{initial}</span>
         )}
       </button>
     );
@@ -55,7 +55,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         {imageUrl ? (
           <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
         ) : (
-          <span className="text-[10px] font-semibold text-white/80">{initial}</span>
+          <span className="text-[10px] font-semibold text-white/90">{initial}</span>
         )}
       </span>
     );
@@ -66,7 +66,7 @@ export const Avatar: React.FC<AvatarProps> = ({
       {imageUrl ? (
         <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
       ) : (
-        <span className="text-[10px] font-semibold text-white/80">{initial}</span>
+        <span className="text-[10px] font-semibold text-white/90">{initial}</span>
       )}
     </span>
   );
