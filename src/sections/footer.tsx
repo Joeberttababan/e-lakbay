@@ -1,5 +1,5 @@
 import { Facebook, Instagram, X, Github, Youtube } from "lucide-react";
-import logoWhite from '../assets/e-lakbay_Logo.svg';
+import logoWhite from '../assets/E-lakbay_Logo.svg';
 
 interface FooterProps {
   onOpenComingSoon?: () => void;
