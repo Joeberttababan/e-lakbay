@@ -10,6 +10,7 @@ import { DestinationsPage } from './pages/DestinationsPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { EventsPage } from './pages/EventsPage';
+import { WildlifePage } from './pages/WildlifePage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -19,7 +20,7 @@ import { SonnerGlobal } from './components/modern-ui/sonner';
 import Footer from './sections/footer';
 import ComingSoonModal from './components/ui/coming_soon';
 import loadingVideo from './assets/Loading_chatbot.webm';
-import { initializeAnalyticsSession } from './lib/analytics';
+import { useAnalytics } from './lib/useAnalytics';
 
 const POST_LOGIN_REDIRECT_KEY = 'post_login_redirect';
 
@@ -114,6 +115,9 @@ const AppContent: React.FC = () => {
   const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
   const scrollAttemptRef = useRef(0);
 
+  // Initialize analytics tracking for real-time visitor analytics
+  useAnalytics({ uid: user?.id });
+
   // Get the dashboard route based on user role
   const getDashboardRoute = useCallback((role: string | null | undefined): string => {
     if (role === 'admin' || role === 'developer') {
@@ -153,13 +157,6 @@ const AppContent: React.FC = () => {
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     });
   }, [location.pathname]);
-
-  useEffect(() => {
-    initializeAnalyticsSession({
-      userId: user?.id ?? null,
-      userRole: profile?.role ?? null,
-    });
-  }, [user?.id, profile?.role]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -287,6 +284,15 @@ const AppContent: React.FC = () => {
               element={
                 <EventsPage
                   onBackHome={() => navigate('/')}
+                />
+              }
+            />
+            <Route
+              path="/wildlife"
+              element={
+                <WildlifePage
+                  onBackHome={() => navigate('/')}
+                  onViewProfile={handleViewProfile}
                 />
               }
             />

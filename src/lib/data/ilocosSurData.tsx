@@ -34,7 +34,18 @@ const ILOCOS_SUR = {
 };
 
 export const getMunicipalities = () => Object.keys(ILOCOS_SUR).sort();
-export const getBarangays = (municipality) =>
-  ILOCOS_SUR[municipality] ? [...ILOCOS_SUR[municipality]].sort() : [];
+
+// Helper function to find municipality key with case-insensitive matching
+const findMunicipalityKey = (input: string): string | undefined => {
+  const normalizedInput = input.toLowerCase().trim();
+  return Object.keys(ILOCOS_SUR).find(
+    (key) => key.toLowerCase() === normalizedInput
+  );
+};
+
+export const getBarangays = (municipality: string) => {
+  const municipalityKey = findMunicipalityKey(municipality);
+  return municipalityKey ? [...ILOCOS_SUR[municipalityKey as keyof typeof ILOCOS_SUR]].sort() : [];
+};
 
 export default ILOCOS_SUR;

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLockBodyScroll } from '../lib/useLockBodyScroll';
@@ -64,8 +64,10 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
   initialData,
   onSuccess,
 }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const isMunicipalityUser = profile?.role === 'municipality';
+  const isMunicipalityEditableMode = !isMunicipalityUser;
   const [destinationName, setDestinationName] = useState('');
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [description, setDescription] = useState('');
@@ -103,8 +105,21 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
       });
       setError(null);
       setIsSubmitting(false);
+    } else if (isMunicipalityUser && mode === 'create') {
+      // Reset form for municipality users creating a new destination
+      setDestinationName('');
+      setLocationData(null);
+      setDescription('');
+      setFiles([]);
+      setExistingImageUrls([]);
+      setPreviews((prev) => {
+        prev.forEach((url) => URL.revokeObjectURL(url));
+        return [];
+      });
+      setError(null);
+      setIsSubmitting(false);
     }
-  }, [initialData, mode, open]);
+  }, [initialData, mode, open, isMunicipalityUser, profile?.municipality_name]);
 
   useEffect(() => {
     return () => {
@@ -119,6 +134,13 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
     if (previews.length === 0) return 'Upload up to 20 images.';
     return `${previews.length} of ${MAX_IMAGES} selected.`;
   }, [previews.length]);
+
+  const handleLocationConfirmed = useCallback(
+    (loc: LocationData) => {
+      setLocationData(loc);
+    },
+    [],
+  );
 
   const handleFilesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(event.target.files ?? []);
@@ -151,8 +173,13 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
       return;
     }
 
-    if (!locationData?.municipality || !locationData?.barangay) {
-      setError('Please select a municipality and barangay.');
+    if (!locationData?.barangay) {
+      setError('Please select a barangay.');
+      return;
+    }
+
+    if (!locationData?.municipality) {
+      setError('Municipality is required.');
       return;
     }
 
@@ -306,8 +333,24 @@ export const DestinationUploadModal: React.FC<DestinationUploadModalProps> = ({
             />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
-            <label className="text-sm text-black/60">Location</label>
-            <LocationPickerMap onLocationConfirmed={setLocationData} initialLocation={locationData} hideIntro defaultPinMapOpen={false} />
+            {isMunicipalityUser && (
+              <div className="flex flex-col gap-2 rounded-lg bg-white/5 border border-white/10">
+                <label className="text-sm text-black/60">Municipality</label>
+                <div className="rounded-lg bg-white/10 border border-black/15 px-4 py-2 text-sm text-black">
+                  {profile?.municipality_name || 'N/A'}
+                </div>
+                <p className="text-xs text-black/50">Your municipality is pre-selected and cannot be changed.</p>
+              </div>
+            )}
+            <label className="text-sm text-black/60">{isMunicipalityUser ? 'Select Location (Barangay)' : 'Location'}</label>
+            <LocationPickerMap 
+              onLocationConfirmed={handleLocationConfirmed}
+              initialLocation={locationData} 
+              hideIntro 
+              defaultPinMapOpen={false} 
+              isMunicipalityMode={isMunicipalityUser}
+              fixedMunicipality={isMunicipalityUser ? profile?.municipality_name || null : null}
+            />
             {locationData && (
               <p className="text-xs text-black/60">
                 Location: {locationData.barangay ?? 'Unknown'}, {locationData.municipality ?? 'Unknown'}

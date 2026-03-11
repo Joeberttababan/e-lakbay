@@ -4,10 +4,12 @@ import type { Profile } from '../components/AuthProvider';
 import { DashboardAnalyticsSection } from '../sections/dashboard_analyticssection';
 import { DashboardProductSection } from '../sections/dashboard_productsection';
 import { DashboardDestinationSection } from '../sections/dashboard_destinationsection';
+import { DashboardWildlifeSection } from '../sections/dashboard_wildlifesection';
 import { DashboardSidebar } from '../components/DashboardSidebar';
 import { ProductUploadModal } from '../components/ProductUploadModal';
 import { DestinationUploadModal } from '../components/DestinationUploadModal';
 import { EventUploadModal } from '../components/EventUploadModal';
+import { WildlifeUploadModal } from '../components/WildlifeUploadModal';
 import { ProductModal } from '../components/ProductModal';
 import { useAuth } from '../components/AuthProvider';
 
@@ -50,6 +52,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
   const [isProductOpen, setIsProductOpen] = useState(false);
   const [isDestinationOpen, setIsDestinationOpen] = useState(false);
   const [isEventOpen, setIsEventOpen] = useState(false);
+  const [isWildlifeOpen, setIsWildlifeOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<ActiveProduct | null>(null);
   const [editingProduct, setEditingProduct] = useState<ActiveProduct | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -57,17 +60,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
 
   useEffect(() => {
     const section = sectionRef.current;
-    if (!section) return;
+    const container = contentRef.current;
+    if (!section || !container) return;
 
     const handleWheel = (event: WheelEvent) => {
-      const container = contentRef.current;
-      if (!container) return;
+      // If the event originates inside the sidebar, let it scroll independently
+      const sidebar = document.getElementById('dashboard-sidebar');
+      if (sidebar && sidebar.contains(event.target as Node)) return;
 
+      // Always scroll the main container, regardless of cursor position
       const canScroll = container.scrollHeight > container.clientHeight;
-      if (!canScroll) return;
-
-      container.scrollBy({ top: event.deltaY });
-      event.preventDefault();
+      if (canScroll) {
+        container.scrollBy({ top: event.deltaY });
+        event.preventDefault();
+      }
     };
 
     section.addEventListener('wheel', handleWheel, { passive: false });
@@ -79,10 +85,17 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
     if (!container) return;
     const target = container.querySelector<HTMLElement>(`#${sectionId}`);
     if (!target) return;
+    
+    // Calculate the position with a small top offset for better visibility
     const containerTop = container.getBoundingClientRect().top;
     const targetTop = target.getBoundingClientRect().top;
-    const offsetTop = targetTop - containerTop + container.scrollTop;
-    container.scrollTo({ top: offsetTop, behavior: 'smooth' });
+    const offsetTop = targetTop - containerTop + container.scrollTop - 20; // 20px offset for better visibility
+    
+    // Smooth scroll with proper timing
+    container.scrollTo({ 
+      top: Math.max(0, offsetTop), 
+      behavior: 'smooth' 
+    });
   };
 
   return (
@@ -99,6 +112,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
               onOpenProductUpload={() => setIsProductOpen(true)}
               onOpenDestinationUpload={() => setIsDestinationOpen(true)}
               onOpenEventUpload={() => setIsEventOpen(true)}
+              onOpenWildlifeUpload={() => setIsWildlifeOpen(true)}
               onJumpToSection={handleJumpToSection}
             />
           </motion.div>
@@ -127,6 +141,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
               }}
             />
             <DashboardDestinationSection userId={user?.id ?? profile?.id ?? null} />
+            <DashboardWildlifeSection onOpenWildlifeUpload={() => setIsWildlifeOpen(true)} />
           </div>
         </div>
       </div>
@@ -134,6 +149,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
       <ProductUploadModal open={isProductOpen} onClose={() => setIsProductOpen(false)} />
       <DestinationUploadModal open={isDestinationOpen} onClose={() => setIsDestinationOpen(false)} />
       <EventUploadModal isOpen={isEventOpen} onClose={() => setIsEventOpen(false)} />
+      <WildlifeUploadModal open={isWildlifeOpen} onClose={() => setIsWildlifeOpen(false)} />
       <ProductModal
         open={Boolean(activeProduct)}
         product={activeProduct}

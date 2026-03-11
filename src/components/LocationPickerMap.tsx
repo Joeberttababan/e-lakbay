@@ -27,6 +27,8 @@ interface LocationPickerMapProps {
   hideIntro?: boolean;
   defaultPinMapOpen?: boolean;
   showBarangay?: boolean;
+  isMunicipalityMode?: boolean;
+  fixedMunicipality?: string | null;
 }
 
 const toLocationData = (
@@ -49,9 +51,12 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
   hideIntro = false,
   defaultPinMapOpen = false,
   showBarangay = true,
+  isMunicipalityMode = false,
+  fixedMunicipality = null,
 }) => {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const initializedRef = useRef(false);
+  const lastInitialLocationRef = useRef<LocationData | null>(null);
   const [pin, setPin] = useState<{ lat: number; lng: number } | null>(null);
   const [municipality, setMunicipality] = useState('');
   const [barangay, setBarangay] = useState('');
@@ -68,14 +73,40 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
     setMapCenter(center);
   }, [center]);
 
+  // When fixedMunicipality is set, initialize with it
   useEffect(() => {
-    if (!initialLocation) {
+    if (fixedMunicipality && !initializedRef.current) {
+      setMunicipality(fixedMunicipality);
       initializedRef.current = true;
+    }
+  }, [fixedMunicipality]);
+
+  useEffect(() => {
+    // Only initialize if initialLocation actually changed (not from our own state updates)
+    const locationJSON = JSON.stringify(initialLocation);
+    const lastLocationJSON = JSON.stringify(lastInitialLocationRef.current);
+    
+    if (locationJSON === lastLocationJSON) {
+      return; // No change, skip
+    }
+
+    lastInitialLocationRef.current = initialLocation;
+
+    if (!initialLocation) {
+      if (!fixedMunicipality) {
+        initializedRef.current = true;
+      }
       return;
     }
 
-    setMunicipality(initialLocation.municipality ?? '');
-    setBarangay(initialLocation.barangay ?? '');
+    // If fixedMunicipality is set, ensure we use it and only update barangay
+    if (fixedMunicipality) {
+      setMunicipality(fixedMunicipality);
+      setBarangay(initialLocation.barangay ?? '');
+    } else {
+      setMunicipality(initialLocation.municipality ?? '');
+      setBarangay(initialLocation.barangay ?? '');
+    }
 
     if (typeof initialLocation.lat === 'number' && typeof initialLocation.lng === 'number') {
       const coords = { lat: initialLocation.lat, lng: initialLocation.lng };
@@ -84,7 +115,7 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
     }
 
     initializedRef.current = true;
-  }, [initialLocation]);
+  }, [initialLocation, fixedMunicipality]);
 
   useEffect(() => {
     if (!initializedRef.current) return;
@@ -126,6 +157,7 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
   };
 
   const handleMunicipalityChange = (value: string) => {
+    if (fixedMunicipality) return; // Cannot change if fixed
     setMunicipality(value);
     setBarangay('');
     setPin(null);
@@ -141,8 +173,8 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
   return (
     <div className="flex flex-col gap-3">
       {!hideIntro && (
-        <div className="rounded-2xl border border-black/15 bg-black/5 p-3 text-xs text-black/70">
-          Select a municipality{showBarangay ? ' and barangay' : ''}. The map preview is optional if you want to refine the pin.
+        <div className="rounded-2xl border border-black/15 bg-black/5 p-5 text-base text-black/70">
+          {fixedMunicipality ? 'Select a barangay. The map preview is optional if you want to refine the pin.' : isMunicipalityMode ? 'Select a barangay. The map preview is optional if you want to refine the pin.' : `Select a municipality${showBarangay ? ' and barangay' : ''}. The map preview is optional if you want to refine the pin.`}
         </div>
       )}
 
@@ -153,31 +185,33 @@ const LocationPickerMap: React.FC<LocationPickerMapProps> = ({
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="location-municipality" className="text-xs text-black/60">Municipality / City</label>
-          <select
-            id="location-municipality"
-            value={municipality}
-            onChange={(event) => handleMunicipalityChange(event.target.value)}
-            className="mt-1 w-full rounded-lg bg-white/10 border border-black/15 px-3 py-2 text-xs text-black"
-          >
-            <option value="">Select municipality</option>
-            {municipalities.map((item) => (
-              <option key={item} value={item} className="text-black">
-                {item}
-              </option>
-            ))}
-          </select>
-        </div>
-        {showBarangay && (
+        {!isMunicipalityMode && !fixedMunicipality && (
           <div>
+            <label htmlFor="location-municipality" className="text-xs text-black/60">Municipality / City</label>
+            <select
+              id="location-municipality"
+              value={municipality}
+              onChange={(event) => handleMunicipalityChange(event.target.value)}
+              className="mt-1 w-full rounded-lg bg-white/10 border border-black/15 px-3 py-3 text-sm text-black"
+            >
+              <option value="">Select municipality</option>
+              {municipalities.map((item) => (
+                <option key={item} value={item} className="text-black">
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {showBarangay && (
+          <div className={(isMunicipalityMode || fixedMunicipality) ? 'sm:col-span-2' : ''}>
             <label htmlFor="location-barangay" className="text-xs text-black/60">Barangay</label>
             <select
               id="location-barangay"
               value={barangay}
               onChange={(event) => void handleBarangayChange(event.target.value)}
               disabled={!municipality}
-              className="mt-1 w-full rounded-lg bg-white/10 border border-black/15 px-3 py-2 text-xs text-black disabled:opacity-60"
+              className="mt-1 w-full rounded-lg bg-white/10 border border-black/15 px-3 py-3 text-sm text-black disabled:opacity-60"
             >
               <option value="">Select barangay</option>
               {barangays.map((item) => (

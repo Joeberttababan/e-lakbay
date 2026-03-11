@@ -32,251 +32,294 @@ const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon, trend, bgCo
       <div>
         <p className="text-black/60 text-sm font-medium mb-2">{title}</p>
         <p className="text-3xl font-bold text-black">{typeof value === 'number' ? value.toLocaleString() : value}</p>
-        {trend !== undefined && (
-          <p className={`text-xs mt-2 ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}% from last period
-          </p>
-        )}
       </div>
       <div className={`${bgColor} p-3 rounded-lg text-white/90`}>
         {icon}
       </div>
     </div>
+    {trend !== undefined && (
+      <p className={`text-xs mt-3 font-semibold ${trend >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}% from last period
+      </p>
+    )}
   </div>
 );
 
 export const VisitorAnalyticsDashboard: React.FC = () => {
-  // Fetch analytics data
-  const { data: analyticsData = [], isLoading: isAnalyticsLoading } = useQuery({
-    queryKey: ['visitor-analytics'],
+  // Fetch analytics events
+  const { data: analyticsEvents = [], isLoading: isAnalyticsLoading } = useQuery({
+    queryKey: ['visitor-analytics-events'],
     queryFn: async () => {
       // Get last 30 days of data
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const { data, error } = await supabase
-        .from('analytics_events')
+        .from('analytics_data')
         .select('*')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Failed to fetch analytics:', error);
+        console.error('Failed to fetch analytics data:', error);
         return [];
       }
 
       return data || [];
     },
-    staleTime: 60000, // 1 minute
+    staleTime: 30000, // 30 seconds
+    refetchInterval: 30000, // Refetch every 30 seconds for real-time updates
+  });
+
+  // Fetch page views
+  const { data: pageViews = [] } = useQuery({
+    queryKey: ['visitor-page-views'],
+    queryFn: async () => {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const { data, error } = await supabase
+        .from('page_views')
+        .select('*')
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Failed to fetch page views:', error);
+        return [];
+      }
+
+      return data || [];
+    },
+    staleTime: 30000,
+    refetchInterval: 30000,
   });
 
   // Process data for charts
-  const { dailyVisitsData, weeklyVisitsData, monthlyVisitsData, totalMetrics, trafficSourcesData, browserData, deviceData } = useMemo(() => {
-    if (!analyticsData.length) {
+  const { dailyVisitsData, totalMetrics, changes, trafficSourcesData, browserData, deviceData } = useMemo(() => {
+    if (!analyticsEvents.length) {
       return {
         dailyVisitsData: [],
-        weeklyVisitsData: [],
-        monthlyVisitsData: [],
-        totalMetrics: { totalVisitors: 2748, totalPageViews: 3645, totalUniqueVisitors: 2081, avgVisitDuration: '3m 28s', bounceRate: '32.5%' },
+        totalMetrics: { totalVisitors: 0, totalPageViews: 0, totalUniqueVisitors: 0, avgVisitDuration: '0m 0s', bounceRate: '0%' },
+        changes: { visitorsChange: 0, pageViewsChange: 0, totalVisitorsChange: 0, bounceRateChange: 0 },
         trafficSourcesData: [],
         browserData: [],
         deviceData: [],
       };
     }
 
-    // Group data by day
-    const dailyMap = new Map<string, { visitors: Set<string>; pageViews: number; path: string }>();
-    const sessionTracker = new Map<string, { source?: string; medium?: string; device?: string; browser?: string }>();
-    const pagesMap = new Map<string, number>();
-    const sourceMap = new Map<string, number>();
-    const deviceMap = new Map<string, number>();
+    // Create maps for tracking statistics
+    const dailyMap = new Map<string, { uniqueVisitors: Set<string>; sessions: Set<string>; pageViews: number; bounced: number }>();
     const browserMap = new Map<string, number>();
+    const deviceMap = new Map<string, number>();
+    let totalBounced = 0;
+    let totalDuration = 0;
+    let sessionCount = 0;
 
-    analyticsData.forEach((event: any) => {
+    // Process analytics events
+    analyticsEvents.forEach((event: any) => {
       const date = new Date(event.created_at);
       const dayKey = date.toISOString().split('T')[0];
-      const sessionId = event.session_id;
-
-      // Track unique sessions per day
+      
       if (!dailyMap.has(dayKey)) {
-        dailyMap.set(dayKey, { visitors: new Set(), pageViews: 0, path: '' });
+        dailyMap.set(dayKey, { uniqueVisitors: new Set(), sessions: new Set(), pageViews: 0, bounced: 0 });
       }
+      
       const dayData = dailyMap.get(dayKey)!;
-      dayData.visitors.add(sessionId);
-      if (event.event_name === 'page_view') {
-        dayData.pageViews += 1;
-        dayData.path = event.page_path || dayData.path;
+      
+      if (event.visitor_id) {
+        dayData.uniqueVisitors.add(event.visitor_id);
+      }
+      if (event.session_id) {
+        dayData.sessions.add(event.session_id);
+      }
+      
+      if (event.is_bounced) {
+        dayData.bounced++;
+        totalBounced++;
+      }
+      
+      if (event.duration_ms) {
+        totalDuration += event.duration_ms;
+        sessionCount++;
       }
 
-      // Track traffic sources
-      if (!sessionTracker.has(sessionId)) {
-        sessionTracker.set(sessionId, {});
-      }
-      const sessionData = sessionTracker.get(sessionId)!;
-      if (event.source) sessionData.source = event.source;
-      if (event.medium) sessionData.medium = event.medium;
+      // Parse user agent for browser and device detection
+      if (event.user_agent_text) {
+        const ua = event.user_agent_text.toLowerCase();
+        
+        // Browser detection
+        if (ua.includes('chrome') && !ua.includes('edge')) {
+          browserMap.set('Chrome', (browserMap.get('Chrome') || 0) + 1);
+        } else if (ua.includes('firefox')) {
+          browserMap.set('Firefox', (browserMap.get('Firefox') || 0) + 1);
+        } else if (ua.includes('safari') && !ua.includes('chrome')) {
+          browserMap.set('Safari', (browserMap.get('Safari') || 0) + 1);
+        } else if (ua.includes('edge')) {
+          browserMap.set('Edge', (browserMap.get('Edge') || 0) + 1);
+        } else {
+          browserMap.set('Others', (browserMap.get('Others') || 0) + 1);
+        }
 
-      // Track pages
-      if (event.page_path) {
-        pagesMap.set(event.page_path, (pagesMap.get(event.page_path) || 0) + 1);
-      }
-
-      // Track device from metadata
-      if (event.metadata?.userAgent) {
-        const ua = event.metadata.userAgent.toLowerCase();
-        if (ua.includes('mobile')) deviceMap.set('Mobile', (deviceMap.get('Mobile') || 0) + 1);
-        else if (ua.includes('tablet')) deviceMap.set('Tablet', (deviceMap.get('Tablet') || 0) + 1);
-        else deviceMap.set('Desktop', (deviceMap.get('Desktop') || 0) + 1);
-
-        if (ua.includes('chrome')) browserMap.set('Chrome', (browserMap.get('Chrome') || 0) + 1);
-        else if (ua.includes('firefox')) browserMap.set('Firefox', (browserMap.get('Firefox') || 0) + 1);
-        else if (ua.includes('safari')) browserMap.set('Safari', (browserMap.get('Safari') || 0) + 1);
-        else if (ua.includes('edge')) browserMap.set('Edge', (browserMap.get('Edge') || 0) + 1);
-        else browserMap.set('Others', (browserMap.get('Others') || 0) + 1);
+        // Device type detection
+        if (ua.includes('mobile') || ua.includes('android')) {
+          deviceMap.set('Mobile', (deviceMap.get('Mobile') || 0) + 1);
+        } else if (ua.includes('tablet') || ua.includes('ipad')) {
+          deviceMap.set('Tablet', (deviceMap.get('Tablet') || 0) + 1);
+        } else {
+          deviceMap.set('Desktop', (deviceMap.get('Desktop') || 0) + 1);
+        }
       }
     });
 
-    // Build daily chart data
-    const dailyVisits = Array.from(dailyMap.entries()).map(([date, data]) => ({
-      date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-      visitors: data.visitors.size,
-      pageViews: data.pageViews,
-      uniqueVisitors: data.visitors.size,
-    }));
-
-    // Group into weeks for weekly data
-    const weeklyMap = new Map<number, { visitors: number; pageViews: number }>();
-    analyticsData.forEach((event: any) => {
-      const date = new Date(event.created_at);
-      const week = Math.floor((date.getDate() - date.getDay() + 6) / 7);
-      if (!weeklyMap.has(week)) weeklyMap.set(week, { visitors: 0, pageViews: 0 });
-      const weekData = weeklyMap.get(week)!;
-      weekData.visitors += 1;
-      if (event.event_name === 'page_view') weekData.pageViews += 1;
-    });
-
-    const weeklyVisits = Array.from(weeklyMap.entries()).map(([week, data]) => ({
-      week: `Week ${week}`,
-      visitors: data.visitors,
-      pageViews: data.pageViews,
-    }));
-
-    // Group into months
-    const monthlyMap = new Map<string, { visitors: number; pageViews: number; uniqueVisitors: number }>();
-    analyticsData.forEach((event: any) => {
-      const date = new Date(event.created_at);
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
-      if (!monthlyMap.has(monthKey)) monthlyMap.set(monthKey, { visitors: 0, pageViews: 0, uniqueVisitors: 0 });
-      const monthData = monthlyMap.get(monthKey)!;
-      monthData.visitors += 1;
-      monthData.uniqueVisitors += 1; // Simplified
-      if (event.event_name === 'page_view') monthData.pageViews += 1;
-    });
-
-    const monthlyVisits = Array.from(monthlyMap.entries()).map(([month, data]) => ({
-      month,
-      visitors: data.visitors,
-      pageViews: data.pageViews,
-      uniqueVisitors: data.uniqueVisitors,
-    }));
-
-    // Traffic sources
-    let directCount = 0;
-    let searchCount = 0;
-    let socialCount = 0;
-    let referralCount = 0;
-
-    sessionTracker.forEach((data) => {
-      if (!data.source) directCount += 1;
-      else if (data.source.toLowerCase().includes('search')) searchCount += 1;
-      else if (data.source.toLowerCase().includes('social')) socialCount += 1;
-      else referralCount += 1;
-    });
-
-    const totalSources = directCount + searchCount + socialCount + referralCount;
-    const trafficSources = [
-      { name: 'Direct', value: Math.round((directCount / totalSources) * 100), color: '#3b82f6' },
-      { name: 'Search Engine', value: Math.round((searchCount / totalSources) * 100), color: '#10b981' },
-      { name: 'Social Media', value: Math.round((socialCount / totalSources) * 100), color: '#f59e0b' },
-      { name: 'Referral', value: Math.round((referralCount / totalSources) * 100), color: '#8b5cf6' },
-    ].filter((d) => d.value > 0);
-
-    // Device distribution
-    const totalDevices = Array.from(deviceMap.values()).reduce((a, b) => a + b, 0);
-    const devices = Array.from(deviceMap.entries())
-      .map(([device, count]) => ({
-        name: device,
-        value: Math.round((count / totalDevices) * 100),
-        color: device === 'Desktop' ? '#3b82f6' : device === 'Mobile' ? '#ef4444' : '#06b6d4',
+    // Build daily visits data
+    const dailyVisits = Array.from(dailyMap.entries())
+      .map(([date, data]) => ({
+        date: new Date(date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
+        visitors: data.uniqueVisitors.size,
+        pageViews: pageViews.filter(pv => pv.created_at.startsWith(date)).length || data.pageViews,
+        uniqueVisitors: data.uniqueVisitors.size,
       }))
-      .sort((a, b) => b.value - a.value);
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    // Browser distribution
+    // Calculate average session duration
+    const avgDurationMs = sessionCount > 0 ? Math.floor(totalDuration / sessionCount) : 0;
+    const avgMinutes = Math.floor(avgDurationMs / 60000);
+    const avgSeconds = Math.floor((avgDurationMs % 60000) / 1000);
+
+    // Calculate bounce rate - fixed NaN issue
+    const uniqueSessions = new Set(analyticsEvents.map((e: any) => e.session_id)).size;
+    const bouncedSessions = analyticsEvents.filter((e: any) => e.is_bounced).length;
+    const bounceRate = uniqueSessions > 0 ? ((bouncedSessions / uniqueSessions) * 100).toFixed(1) : '0';
+
+    // Calculate total unique visitors and page views
+    const uniqueVisitors = new Set(analyticsEvents.map((e: any) => e.visitor_id)).size;
+    const totalPageViewsCount = pageViews.length;
+
+    // Calculate period-to-period changes (today vs yesterday, or last 7 days vs prior 7 days)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const todayEvents = analyticsEvents.filter((e: any) => new Date(e.created_at) >= today);
+    const yesterdayEvents = analyticsEvents.filter((e: any) => {
+      const d = new Date(e.created_at);
+      d.setHours(0, 0, 0, 0);
+      return d >= yesterday && d < today;
+    });
+
+    const todayVisitors = new Set(todayEvents.map((e: any) => e.visitor_id)).size;
+    const yesterdayVisitors = new Set(yesterdayEvents.map((e: any) => e.visitor_id)).size;
+    const visitorsChange = yesterdayVisitors > 0 ? (((todayVisitors - yesterdayVisitors) / yesterdayVisitors) * 100).toFixed(1) : 0;
+
+    const todayPageViews = pageViews.filter((e: any) => new Date(e.created_at) >= today).length;
+    const yesterdayPageViews = pageViews.filter((e: any) => {
+      const d = new Date(e.created_at);
+      d.setHours(0, 0, 0, 0);
+      return d >= yesterday && d < today;
+    }).length;
+    const pageViewsChange = yesterdayPageViews > 0 ? (((todayPageViews - yesterdayPageViews) / yesterdayPageViews) * 100).toFixed(1) : 0;
+
+    const todayUnique = todayEvents.length;
+    const yesterdayUnique = yesterdayEvents.length;
+    const totalVisitorsChange = yesterdayUnique > 0 ? (((todayUnique - yesterdayUnique) / yesterdayUnique) * 100).toFixed(1) : 0;
+
+    const todayBounced = todayEvents.filter((e: any) => e.is_bounced).length;
+    const todaySessionCount = new Set(todayEvents.map((e: any) => e.session_id)).size;
+    const yesterdayBounced = yesterdayEvents.filter((e: any) => e.is_bounced).length;
+    const yesterdaySessionCount = new Set(yesterdayEvents.map((e: any) => e.session_id)).size;
+    
+    const todayBounceRate = todaySessionCount > 0 ? ((todayBounced / todaySessionCount) * 100) : 0;
+    const yesterdayBounceRate = yesterdaySessionCount > 0 ? ((yesterdayBounced / yesterdaySessionCount) * 100) : 0;
+    const bounceRateChange = yesterdayBounceRate > 0 ? (todayBounceRate - yesterdayBounceRate).toFixed(1) : 0;
+
+    const metrics = {
+      totalVisitors: analyticsEvents.length,
+      totalPageViews: totalPageViewsCount,
+      totalUniqueVisitors: uniqueVisitors,
+      avgVisitDuration: `${avgMinutes}m ${avgSeconds}s`,
+      bounceRate: isNaN(parseFloat(bounceRate as string)) ? '0%' : `${bounceRate}%`,
+    };
+
+    const changes = {
+      visitorsChange: parseFloat(visitorsChange as any),
+      pageViewsChange: parseFloat(pageViewsChange as any),
+      totalVisitorsChange: parseFloat(totalVisitorsChange as any),
+      bounceRateChange: parseFloat(bounceRateChange as any),
+    };
+
+    // Build browser data
     const totalBrowsers = Array.from(browserMap.values()).reduce((a, b) => a + b, 0);
     const browsers = Array.from(browserMap.entries())
-      .map(([browser, count]) => ({
-        name: browser,
+      .map(([name, count]) => ({
+        name,
         users: count,
-        percentage: Math.round((count / totalBrowsers) * 100),
+        percentage: totalBrowsers > 0 ? Math.round((count / totalBrowsers) * 100) : 0,
       }))
       .sort((a, b) => b.users - a.users);
 
-    const totalMetrics = {
-      totalVisitors: dailyVisits.reduce((sum, day) => sum + day.visitors, 0),
-      totalPageViews: dailyVisits.reduce((sum, day) => sum + day.pageViews, 0),
-      totalUniqueVisitors: dailyVisits.reduce((sum, day) => sum + day.uniqueVisitors, 0),
-      avgVisitDuration: '3m 28s',
-      bounceRate: '32.5%',
-    };
+    // Build device data
+    const totalDevices = Array.from(deviceMap.values()).reduce((a, b) => a + b, 0);
+    const devices = Array.from(deviceMap.entries())
+      .map(([name, count]) => ({
+        name,
+        value: totalDevices > 0 ? Math.round((count / totalDevices) * 100) : 0,
+        color: name === 'Desktop' ? '#3b82f6' : name === 'Mobile' ? '#ef4444' : '#06b6d4',
+      }))
+      .sort((a, b) => b.value - a.value);
+
+    // Traffic sources (simplified - using direct vs referred)
+    const directVisitors = analyticsEvents.filter((e: any) => !e.referrer).length;
+    const referredVisitors = analyticsEvents.filter((e: any) => e.referrer).length;
+    
+    const trafficSources = [];
+    if (directVisitors > 0) {
+      trafficSources.push({
+        name: 'Direct',
+        value: Math.round((directVisitors / analyticsEvents.length) * 100),
+        color: '#3b82f6',
+      });
+    }
+    if (referredVisitors > 0) {
+      trafficSources.push({
+        name: 'Referral',
+        value: Math.round((referredVisitors / analyticsEvents.length) * 100),
+        color: '#10b981',
+      });
+    }
 
     return {
       dailyVisitsData: dailyVisits,
-      weeklyVisitsData: weeklyVisits,
-      monthlyVisitsData: monthlyVisits,
-      totalMetrics,
+      totalMetrics: metrics,
+      changes,
       trafficSourcesData: trafficSources,
       browserData: browsers,
       deviceData: devices,
     };
-  }, [analyticsData]);
+  }, [analyticsEvents, pageViews]);
 
   const mostVisitedPages = useMemo(() => {
-    // Provide sample pages if no analytics data
-    if (!analyticsData.length) {
-      return [
-        { page: '/', views: 245, avgTime: '3:15' },
-        { page: '/destinations', views: 189, avgTime: '4:42' },
-        { page: '/products', views: 156, avgTime: '2:58' },
-        { page: '/search-results', views: 98, avgTime: '1:45' },
-        { page: '/profile', views: 67, avgTime: '2:10' },
-      ];
+    if (!pageViews.length) {
+      return [];
     }
 
-    const pageMap = new Map<string, { views: number; avgTime: string }>();
-    analyticsData.forEach((event: any) => {
-      if (event.page_path) {
-        pageMap.set(event.page_path, { views: (pageMap.get(event.page_path)?.views || 0) + 1, avgTime: '2:30' });
+    const pageMap = new Map<string, number>();
+    pageViews.forEach((view: any) => {
+      if (view.page_path) {
+        pageMap.set(view.page_path, (pageMap.get(view.page_path) || 0) + 1);
       }
     });
-    
-    const pages = Array.from(pageMap.entries())
-      .sort((a, b) => b[1].views - a[1].views)
-      .slice(0, 5)
-      .map(([page, data]) => ({ page, ...data }));
-    
-    // If no pages found after processing, provide sample pages
-    if (pages.length === 0) {
-      return [
-        { page: '/', views: 245, avgTime: '3:15' },
-        { page: '/destinations', views: 189, avgTime: '4:42' },
-        { page: '/products', views: 156, avgTime: '2:58' },
-        { page: '/search-results', views: 98, avgTime: '1:45' },
-        { page: '/profile', views: 67, avgTime: '2:10' },
-      ];
-    }
-    
-    return pages;
-  }, [analyticsData]);
+
+    return Array.from(pageMap.entries())
+      .map(([page, views]) => ({
+        page,
+        views,
+        avgTime: '2:30', // Placeholder - can be calculated from page duration
+      }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 5);
+  }, [pageViews]);
 
   // Fetch top visited destinations
   const { data: topDestinations = [], isLoading: isDestinationsLoading } = useQuery({
@@ -431,11 +474,6 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-black mb-2">Visitor Analytics</h1>
-        <p className="text-black/60">Track and analyze your website traffic and visitor behavior</p>
-      </div>
 
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -443,21 +481,21 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
           title="Total Visitors"
           value={totalMetrics.totalVisitors}
           icon={<Users className="w-6 h-6" />}
-          trend={12.5}
+          trend={changes.totalVisitorsChange}
           bgColor="bg-blue-500"
         />
         <MetricCard
           title="Unique Visitors"
           value={totalMetrics.totalUniqueVisitors}
           icon={<Globe className="w-6 h-6" />}
-          trend={8.2}
+          trend={changes.visitorsChange}
           bgColor="bg-green-500"
         />
         <MetricCard
           title="Page Views"
           value={totalMetrics.totalPageViews}
           icon={<Eye className="w-6 h-6" />}
-          trend={15.3}
+          trend={changes.pageViewsChange}
           bgColor="bg-purple-500"
         />
         <MetricCard
@@ -471,7 +509,7 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
           title="Bounce Rate"
           value={totalMetrics.bounceRate}
           icon={<TrendingUp className="w-6 h-6" />}
-          trend={-2.5}
+          trend={changes.bounceRateChange}
           bgColor="bg-red-500"
         />
       </div>

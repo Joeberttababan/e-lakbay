@@ -1,0 +1,56 @@
+ENDANGERED_WILDLIFE TABLE
+=========================
+
+Purpose: Stores information about endangered species uploaded by municipalities in Ilocos Sur
+
+Fields:
+- id (uuid): Primary key, auto-generated
+- species_name (varchar 255): Name of the endangered species (REQUIRED)
+- description (text): Detailed description of the species, habitat, threats, etc.
+- conservation_status (varchar 100): Conservation classification
+  * 'Critically Endangered' - extremely high risk of extinction
+  * 'Endangered' - high risk of extinction
+  * 'Vulnerable' - moderate risk of extinction
+  * 'Near Threatened' - approaching threatened status
+- image_url (text): URL of the primary/featured image
+- image_urls (text[]): Array of all uploaded image URLs
+- municipality_id (uuid): Foreign key to profiles table (municipality that uploaded)
+- approval_status (varchar 50): Current status of submission
+  * 'pending' - waiting for admin review
+  * 'approved' - approved and visible to public
+  * 'declined' - rejected by admin, not visible to public
+- created_at (timestamp): When the upload was created
+- updated_at (timestamp): When the record was last modified
+
+Indexes:
+- municipality_id: For filtering by uploading municipality
+- approval_status: For filtering by status
+- created_at: For sorting by most recent
+
+
+WILDLIFE_RATINGS TABLE
+======================
+
+Purpose: Stores user ratings/reviews of endangered wildlife species
+
+Fields:
+- id (uuid): Primary key, auto-generated
+- wildlife_id (uuid): Foreign key to endangered_wildlife table
+- user_id (uuid): Foreign key to profiles table (tourist rating the species)
+- rating (integer): Numeric rating (1-5 stars)
+- created_at (timestamp): When the rating was submitted
+
+Constraints:
+- One rating per user per wildlife item (UNIQUE constraint)
+- Rating must be between 1-5
+
+Indexes:
+- wildlife_id: For fetching all ratings for a species
+- user_id: For fetching all ratings by a user
+
+Data Flow:
+1. Municipality uploads endangered species → endangered_wildlife created with status 'pending'
+2. Admin reviews submission → updates approval_status to 'approved' or 'declined'
+3. If approved → wildlife becomes visible on Wildlife Conservation page
+4. Tourists can rate approved wildlife → wildlife_ratings records created
+5. Average rating displayed on wildlife card

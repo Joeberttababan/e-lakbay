@@ -12,6 +12,7 @@ interface DashboardSidebarProps {
   onOpenProductUpload: () => void;
   onOpenDestinationUpload: () => void;
   onOpenEventUpload: () => void;
+  onOpenWildlifeUpload: () => void;
   onJumpToSection?: (sectionId: string) => void;
 }
 
@@ -24,6 +25,7 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   onOpenProductUpload,
   onOpenDestinationUpload,
   onOpenEventUpload,
+  onOpenWildlifeUpload,
   onJumpToSection,
 }) => {
     const handleSectionJump = (sectionId: string) => {
@@ -72,13 +74,29 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 
   useEffect(() => {
     if (!isSidebarOpen) return;
+    let lastScrollY = window.scrollY;
+    
     const handleOutsideClick = (event: MouseEvent) => {
       const sidebar = document.getElementById('dashboard-sidebar');
       if (sidebar && !sidebar.contains(event.target as Node)) {
         setIsSidebarOpen(false);
       }
     };
-    const handleScroll = () => setIsSidebarOpen(false);
+    
+    const handleScroll = () => {
+      // Only close sidebar on mobile when the main body scrolls
+      // On desktop (lg+), this scroll listener is not relevant since sidebar is sticky
+      const isDesktop = window.innerWidth >= 1024; // lg breakpoint
+      if (isDesktop) return;
+      
+      // Only close sidebar if the main body/window actually scrolled (scrollY changed)
+      // This prevents closing when scrolling inside the sidebar's own scrollable content
+      if (window.scrollY !== lastScrollY) {
+        lastScrollY = window.scrollY;
+        setIsSidebarOpen(false);
+      }
+    };
+    
     document.addEventListener('mousedown', handleOutsideClick);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
@@ -188,153 +206,169 @@ export const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
       <aside
         id="dashboard-sidebar"
-        className={`lg:w-72 w-[78%] sm:w-[60%] lg:static lg:translate-x-0 fixed left-0 top-0 bottom-0 z-40 transition-transform duration-300 ${
+        className={`lg:w-72 w-[78%] sm:w-[60%] lg:static lg:translate-x-0 fixed left-0 top-0 bottom-0 z-40 transition-transform duration-300 lg:sticky lg:top-24 lg:self-start ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="glass-secondary border border-border rounded-2xl lg:rounded-2xl rounded-l-none p-4 sm:p-5 h-full lg:h-auto lg:sticky top-0 lg:top-24 relative text-black">
-        <div ref={profileCardRef} className="mt-2 glass-secondary border border-border rounded-2xl p-5 relative">
-          <div className="flex flex-col items-center text-center gap-3 mb-4">
-            <button
-              type="button"
-              onClick={handleSelectAvatar}
-              disabled={!isEditing}
-              className={`h-40 w-40 rounded-full border border-border bg-card/60 overflow-hidden flex items-center justify-center relative ${
-                isEditing ? 'group cursor-pointer' : 'cursor-default'
-              }`}
-            >
-              {displayAvatar ? (
-                <img src={displayAvatar} alt={displayName} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-sm font-semibold text-black/70">Profile</span>
-              )}
-              {isEditing && (
-                <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <svg
-                    className="h-6 w-6 text-white"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden="true"
-                  >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                </span>
-              )}
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleAvatarChange}
-              className="hidden"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsEditing((prev) => !prev)}
-            className="absolute top-3 right-3 text-black/70 hover:text-black"
-            aria-label="Edit profile"
-          >
-            ✎
-          </button>
-          {!isEditing ? (
-            <div>
-              <p className="text-sm font-semibold">{displayName}</p>
-              <p className="text-xs text-black/70 mt-1">{battleCry}</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs text-black/70">Name</label>
-                <input
-                  type="text"
-                  placeholder="Enter your name"
-                  value={nameInput}
-                  onChange={(event) => setNameInput(event.target.value)}
-                  className="rounded-lg bg-background/70 border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              <div className="flex flex-col gap-1 text-left">
-                <label className="text-xs text-black/70">Battle cry</label>
-                <input
-                  type="text"
-                  placeholder="Enter your battle cry"
-                  value={battleInput}
-                  onChange={(event) => setBattleInput(event.target.value)}
-                  className="rounded-lg bg-background/70 border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              </div>
-              {error && (
-                <div className="text-xs text-red-200 bg-red-500/20 border border-red-200/30 rounded px-3 py-2">
-                  {error}
-                </div>
-              )}
+        <div className="glass-secondary border border-border rounded-2xl lg:rounded-2xl rounded-l-none p-4 sm:p-5 h-full w-full lg:h-[calc(100vh-6rem)] overflow-y-auto hide-scrollbar flex flex-col relative text-black">
+          <div ref={profileCardRef} className="mt-2 glass-secondary border border-border rounded-2xl p-4 sm:p-5 relative flex-shrink-0">
+            <div className="flex flex-col items-center text-center gap-3 mb-4">
               <button
                 type="button"
-                onClick={handleUpdate}
-                disabled={isSaving}
-                className="rounded-full glass-button border border-border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-60"
+                onClick={handleSelectAvatar}
+                disabled={!isEditing}
+                className={`h-32 sm:h-40 w-32 sm:w-40 rounded-full border border-border bg-card/60 overflow-hidden flex items-center justify-center relative flex-shrink-0 ${
+                  isEditing ? 'group cursor-pointer' : 'cursor-default'
+                }`}
               >
-                {isSaving ? 'Updating...' : 'Update Profile'}
+                {displayAvatar ? (
+                  <img src={displayAvatar} alt={displayName} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-xs sm:text-sm font-semibold text-black/70">Profile</span>
+                )}
+                {isEditing && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg
+                      className="h-5 w-5 sm:h-6 sm:w-6 text-white"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                  </span>
+                )}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsEditing((prev) => !prev)}
+              className="absolute top-3 right-3 text-black/70 hover:text-black text-lg"
+              aria-label="Edit profile"
+            >
+              ✎
+            </button>
+            {!isEditing ? (
+              <div>
+                <p className="text-xs sm:text-sm font-semibold line-clamp-2">{displayName}</p>
+                <p className="text-xs text-black/70 mt-1 line-clamp-2">{battleCry}</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 sm:gap-3">
+                <div className="flex flex-col gap-1 text-left">
+                  <label className="text-xs text-black/70">Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter your name"
+                    value={nameInput}
+                    onChange={(event) => setNameInput(event.target.value)}
+                    className="rounded-lg bg-background/70 border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                <div className="flex flex-col gap-1 text-left">
+                  <label className="text-xs text-black/70">About your municipality</label>
+                  <input
+                    type="text"
+                    placeholder="Tell us about your municipality"
+                    value={battleInput}
+                    onChange={(event) => setBattleInput(event.target.value)}
+                    className="rounded-lg bg-background/70 border border-border px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </div>
+                {error && (
+                  <div className="text-xs text-red-200 bg-red-500/20 border border-red-200/30 rounded px-3 py-2">
+                    {error}
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  disabled={isSaving}
+                  className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-60"
+                >
+                  {isSaving ? 'Updating...' : 'Update Profile'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 sm:mt-6 flex-1 min-h-0">
+            <p className="text-xs uppercase tracking-[0.2em] text-black/70">Dashboard</p>
+            <nav className="mt-3 sm:mt-4 flex flex-col gap-2 text-xs sm:text-sm">
+              <button
+                type="button"
+                onClick={() => handleSectionJump('analytics-overview')}
+                className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors truncate"
+              >
+                Overview
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSectionJump('products')}
+                className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors truncate"
+              >
+                Products
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSectionJump('destinations')}
+                className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors truncate"
+              >
+                Destinations
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSectionJump('wildlife-section')}
+                className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors truncate"
+              >
+                Wildlife
+              </button>
+            </nav>
+
+            <div className="mt-2 sm:mt-4 border-t border-border pt-2 sm:pt-3 flex flex-col gap-2 sm:gap-3">
+              <button
+                type="button"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                onClick={onOpenProductUpload}
+              >
+                Upload Product
+              </button>
+              <button
+                type="button"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                onClick={onOpenDestinationUpload}
+              >
+                Upload Destination
+              </button>
+              <button
+                type="button"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                onClick={onOpenEventUpload}
+              >
+                Add Event
+              </button>
+              <button
+                type="button"
+                className="rounded-full glass-button border border-border px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors hover:bg-black/5 w-full"
+                onClick={onOpenWildlifeUpload}
+              >
+                Upload Wildlife
               </button>
             </div>
-          )}
-        </div>
-
-        <p className="text-xs uppercase tracking-[0.2em] text-black/70 mt-6">Dashboard</p>
-        <nav className="mt-4 flex flex-col gap-2 text-sm">
-          <button
-            type="button"
-            onClick={() => handleSectionJump('analytics-overview')}
-            className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors"
-          >
-            Overview
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSectionJump('products')}
-            className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors"
-          >
-            Products
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSectionJump('destinations')}
-            className="text-left text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors"
-          >
-            Destinations
-          </button>
-        </nav>
-
-        <div className="mt-1 border-t border-border pt-2 flex flex-col gap-3">
-          <button
-            type="button"
-            className="rounded-full glass-button border border-border px-4 py-2 text-sm font-semibold transition-colors"
-            onClick={onOpenProductUpload}
-          >
-            Upload Product
-          </button>
-          <button
-            type="button"
-            className="rounded-full glass-button border border-border px-4 py-2 text-sm font-semibold transition-colors"
-            onClick={onOpenDestinationUpload}
-          >
-            Upload Destination
-          </button>
-          <button
-            type="button"
-            className="rounded-full glass-button border border-border px-4 py-2 text-sm font-semibold transition-colors"
-            onClick={onOpenEventUpload}
-          >
-            Add Event
-          </button>
-        </div>
+          </div>
         </div>
       </aside>
     </>

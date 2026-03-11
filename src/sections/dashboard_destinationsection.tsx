@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { DestinationModalCardSkeleton, SkeletonList } from '../components/ui/Skeletons';
 import { DestinationModalCard } from '../components/DestinationModalCard';
 import { supabase } from '../lib/supabaseClient';
@@ -187,6 +188,31 @@ export const DashboardDestinationSection: React.FC<DashboardDestinationSectionPr
           ))
         )}
       </div>
+
+      {/* Wildlife Conservation Link */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="mt-8"
+      >
+        <Link
+          to="/wildlife"
+          className="w-full flex items-center justify-between px-6 py-4 rounded-lg bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:border-emerald-400 hover:shadow-lg transition-all group"
+        >
+          <div className="text-left">
+            <h3 className="font-semibold text-black text-lg group-hover:text-emerald-700 transition-colors">
+              🦁 Explore Endangered Wildlife
+            </h3>
+            <p className="text-sm text-black/70 group-hover:text-black/80 transition-colors">
+              Discover and contribute to wildlife conservation efforts in the district
+            </p>
+          </div>
+          <div className="text-2xl ml-4 group-hover:translate-x-1 transition-transform">
+            →
+          </div>
+        </Link>
+      </motion.div>
     </section>
   );
 };

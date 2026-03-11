@@ -12,4 +12,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      // Analytics API proxy - forwards to Supabase edge function
+      '/api/analytics': {
+        target: process.env.VITE_SUPABASE_URL ? `${process.env.VITE_SUPABASE_URL}/functions/v1` : 'https://qaefqokcjhptnrotsiqr.supabase.co/functions/v1',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/analytics/, '/capture-analytics'),
+      },
+    },
+  },
 })

@@ -87,6 +87,7 @@ export const NavBar: React.FC<NavBarProps> = ({
   const isDestinationsActive = location.pathname === '/destinations' || (isHome && activeHash === 'top-destinations');
   const isProductsActive = location.pathname === '/products' || (isHome && activeHash === 'products');
   const isMunicipalitiesActive = isHome && activeHash === 'municipalities';
+  const isWildlifeActive = location.pathname === '/wildlife' || (isHome && activeHash === 'wildlife-conservation');
   const activeLinkClass = isHome ? 'font-semibold underline underline-offset-4 text-white' : 'font-semibold underline underline-offset-4 text-black';
   const navTextClass = isHome ? 'text-white' : 'text-black';
 
@@ -132,8 +133,8 @@ export const NavBar: React.FC<NavBarProps> = ({
         </button>
         <button
           type="button"
-          onClick={() => handleSectionJump('wildlife-conservation')}
-          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+          onClick={() => navigate('/wildlife')}
+          className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70', isWildlifeActive && activeLinkClass)}
         >
           Wildlife Conservation
         </button>
@@ -159,7 +160,7 @@ export const NavBar: React.FC<NavBarProps> = ({
             </Button>
             <Button
               variant={active === 'signup' ? 'default' : 'outline'}
-              className={cn('rounded-full px-5 py-2 font-medium transition-colors', active === 'signup' ? 'shadow-md' : '')}
+              className={cn('text-black rounded-full px-5 py-2 font-medium transition-colors', active === 'signup' ? 'shadow-md' : '')}
               onClick={() => handleAuthClick('signup')}
             >
               Sign Up
@@ -278,8 +279,11 @@ export const NavBar: React.FC<NavBarProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => handleSectionJump('wildlife-conservation')}
-            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
+            onClick={() => {
+              navigate('/wildlife');
+              setIsMenuOpen(false);
+            }}
+            className={cn('text-left text-sm font-medium tracking-wide transition-colors', isHome ? 'hover:text-white/70' : 'hover:text-black/70', isWildlifeActive && (isHome ? 'text-white font-semibold' : 'text-black font-semibold'))}
           >
             Wildlife Conservation
           </button>

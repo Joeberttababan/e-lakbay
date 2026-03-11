@@ -292,7 +292,7 @@ export const DashboardAnalyticsSection: React.FC<DashboardAnalyticsSectionProps>
                     dataKey="label"
                     type="category"
                     width={chartLabelWidth}
-                    tick={{ fontSize: 14, fill: '#ffffff' }}
+                    tick={{ fontSize: 14, fill: 'rgba(0,0,0,0.6)' }}
                     tickLine={false}
                     axisLine={false}
                     tickMargin={2}

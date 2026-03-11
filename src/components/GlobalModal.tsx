@@ -122,16 +122,16 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
         aria-labelledby="auth-modal-title"
       >
         <button
-          className="absolute top-3 right-3 modal-stone-muted hover:opacity-80 text-2xl font-bold"
+          className="absolute top-3 right-3 text-black hover:opacity-80 text-2xl font-bold"
           onClick={closeModal}
           aria-label="Close"
         >
           ×
         </button>
-        <h2 className="text-2xl font-semibold mb-2 text-center" id="auth-modal-title">
+        <h2 className="text-2xl font-semibold mb-2 text-center text-black" id="auth-modal-title">
           {isSignup ? 'Create your account' : 'Welcome back'}
         </h2>
-        <p className="text-sm modal-stone-muted mb-6 text-center">
+        <p className="text-sm text-black/60 mb-6 text-center">
           {isSignup ? 'Start planning your next journey in minutes.' : 'Sign in to continue exploring.'}
         </p>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -139,7 +139,7 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
             <Button
               type="button"
               variant="outline"
-              className="w-full rounded-full"
+              className="w-full rounded-full bg-hero-gradient text-black hover:brightness-110 border-0"
               onClick={async () => {
                 if (isSubmitting) return;
                 setFormError(null);
@@ -162,10 +162,10 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
             </Button>
           )}
           {!isSignup && (
-            <div className="flex items-center gap-3 text-xs modal-stone-soft">
-              <span className="h-px flex-1 bg-white/10" />
+            <div className="flex items-center gap-3 text-xs text-black/40">
+              <span className="h-px flex-1 bg-black/20" />
               OR
-              <span className="h-px flex-1 bg-white/10" />
+              <span className="h-px flex-1 bg-black/20" />
             </div>
           )}
           {isSignup && (
@@ -174,7 +174,7 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
               placeholder="Full name"
               value={formState.fullName}
               onChange={handleChange('fullName')}
-              className="rounded px-4 py-2 bg-white/15 border border-white/30 modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="rounded px-4 py-2 bg-white border border-white/20 text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           )}
@@ -183,7 +183,7 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
             placeholder="Email address"
             value={formState.email}
             onChange={handleChange('email')}
-            className="rounded px-4 py-2 bg-white/15 border border-white/30 modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/50"
+            className="rounded px-4 py-2 bg-white border border-white/20 text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
           <div className="relative">
@@ -192,13 +192,13 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
               placeholder="Password"
               value={formState.password}
               onChange={handleChange('password')}
-              className="w-full rounded px-4 py-2 pr-10 bg-white/15 border border-white/30 modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="w-full rounded px-4 py-2 pr-10 bg-white border border-white/20 text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-black/60 hover:text-black/90 transition-colors"
               tabIndex={-1}
             >
               {showPassword ? (
@@ -220,13 +220,13 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
                 placeholder="Confirm password"
                 value={formState.confirmPassword}
                 onChange={handleChange('confirmPassword')}
-                className="w-full rounded px-4 py-2 pr-10 bg-white/15 border border-white/30 modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/50"
+                className="w-full rounded px-4 py-2 pr-10 bg-white border border-white/20 text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white/90 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-black/60 hover:text-black/90 transition-colors"
                 tabIndex={-1}
               >
                 {showConfirmPassword ? (
@@ -243,23 +243,23 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
             </div>
           )}
           {!isSignup && (
-            <label className="flex items-center gap-2 text-sm modal-stone-muted">
+            <label className="flex items-center gap-2 text-sm text-black/60">
               <input
                 type="checkbox"
                 checked={formState.remember}
                 onChange={handleChange('remember')}
-                className="h-4 w-4 rounded border-white/40 bg-white/20"
+                className="h-4 w-4 rounded border-black/40 bg-black/5"
               />
               Remember me
             </label>
           )}
           {formError && (
-            <div className="text-sm text-red-200 bg-red-500/20 border border-red-200/30 rounded px-3 py-2">
+            <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
               {formError}
             </div>
           )}
           <Button
-            className="w-full rounded-full mt-2"
+            className="w-full rounded-full mt-2 bg-hero-gradient text-white hover:brightness-110"
             variant="default"
             type="submit"
             loading={isSubmitting}
@@ -275,7 +275,7 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
               onModeChange?.(nextMode);
               openModal(nextMode);
             }}
-            className="text-sm modal-stone-text"
+            className="text-sm text-black/70 hover:text-black"
           >
             {switchLabel}
           </button>

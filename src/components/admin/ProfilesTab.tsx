@@ -33,6 +33,7 @@ const ProfilesTab: React.FC = () => {
     full_name: string;
     role: RoleOption;
     battle_cry: string;
+    municipality_name: string;
   } | null>(null);
 
   // Load profiles
@@ -43,7 +44,7 @@ const ProfilesTab: React.FC = () => {
       setError(null);
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role, battle_cry, created_at')
+        .select('id, full_name, email, role, battle_cry, municipality_name, created_at')
         .order('created_at', { ascending: false });
 
       if (!isMounted) return;
@@ -134,6 +135,7 @@ const ProfilesTab: React.FC = () => {
         ? (profile.role as RoleOption)
         : 'tourist') as RoleOption,
       battle_cry: profile.battle_cry ?? '',
+      municipality_name: profile.municipality_name ?? '',
     });
   };
 
@@ -148,6 +150,7 @@ const ProfilesTab: React.FC = () => {
       full_name: editValues.full_name.trim() || null,
       role: editValues.role,
       battle_cry: editValues.battle_cry.trim() || null,
+      municipality_name: editValues.municipality_name.trim() || null,
     };
 
     const { error: updateError } = await supabase
@@ -278,6 +281,7 @@ const ProfilesTab: React.FC = () => {
                   ))}
                 </select>
               </TableHead>
+              <TableHead>Municipality</TableHead>
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -400,6 +404,22 @@ const ProfilesTab: React.FC = () => {
                             <span className="text-[#1A1A1A]/60">—</span>
                           )}
                         </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isEditing ? (
+                        <input
+                          value={editValues?.municipality_name ?? ''}
+                          onChange={(event) =>
+                            setEditValues((prev) =>
+                              prev ? { ...prev, municipality_name: event.target.value } : prev
+                            )
+                          }
+                          className="w-40 rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
+                          aria-label="Municipality name"
+                        />
+                      ) : (
+                        <span className="text-[#1A1A1A]/70">{profile.municipality_name || '—'}</span>
                       )}
                     </TableCell>
                     <TableCell>

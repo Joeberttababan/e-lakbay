@@ -4,6 +4,7 @@ export type AdminProfile = {
   email: string | null;
   role: string | null;
   battle_cry: string | null;
+  municipality_name: string | null;
   created_at: string | null;
 };
 

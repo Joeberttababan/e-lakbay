@@ -14,6 +14,7 @@ interface Event {
   category: 'festival' | 'cultural' | 'holiday' | 'other';
   municipality_id: string;
   created_at: string;
+  image_urls?: string[];
 }
 
 interface EventsPageProps {
@@ -32,7 +33,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
       try {
         const { data, error } = await supabase
           .from('events')
-          .select('*')
+          .select('*,image_urls')
           .order('start_date', { ascending: true });
 
         if (error) {
@@ -197,7 +198,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
         </div>
       </motion.section>
 
-      {/* Calendar Section */}
+      {/* Database Events Section */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -205,26 +206,6 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
         className="px-4 sm:px-6 lg:px-10"
       >
         <div className="max-w-7xl mx-auto">
-          <div className="rounded-2xl overflow-hidden shadow-lg bg-white">
-            {/* Calendar Embed */}
-            <div className="w-full" style={{ minHeight: '600px' }}>
-              <iframe
-                src="https://calendar.google.com/calendar/embed?src=elakbay.ilocos2@gmail.com&ctz=Asia%2FManila"
-                style={{
-                  border: 0,
-                  width: '100%',
-                  height: '600px',
-                  display: 'block',
-                }}
-                frameBorder="0"
-                scrolling="no"
-                title="E-Lakbay Events Calendar"
-                loading="lazy"
-              />
-            </div>
-          </div>
-
-          {/* Database Events Section */}
           {!loading && events.length > 0 && (
             <div className="mt-12">
               <h2 className="text-2xl font-bold mb-6">Upcoming Municipality Events</h2>
@@ -237,6 +218,32 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
                     transition={{ duration: 0.5 }}
                     className="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white border border-gray-200 relative"
                   >
+                    {/* Event Images - Full Width */}
+                    {event.image_urls && event.image_urls.length > 0 ? (
+                      <div className="w-full h-48 overflow-x-auto scrollbar-hide flex">
+                        {event.image_urls.map((imageUrl, idx) => (
+                          <img
+                            key={idx}
+                            src={imageUrl}
+                            alt={`Event image ${idx + 1}`}
+                            className="h-full w-full flex-shrink-0 object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="w-full h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <div className="text-center">
+                          <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <p className="text-gray-500 text-sm font-medium">No images available</p>
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Pin Button */}
                     <button
                       type="button"
@@ -313,6 +320,26 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
             </div>
           )}
 
+          {/* Calendar Section */}
+          <div className="mt-12 rounded-2xl overflow-hidden shadow-lg bg-white">
+            {/* Calendar Embed */}
+            <div className="w-full" style={{ minHeight: '400px' }}>
+              <iframe
+                src="https://calendar.google.com/calendar/embed?src=elakbay.ilocos2@gmail.com&ctz=Asia%2FManila"
+                style={{
+                  border: 0,
+                  width: '100%',
+                  height: '400px',
+                  display: 'block',
+                }}
+                frameBorder="0"
+                scrolling="no"
+                title="E-Lakbay Events Calendar"
+                loading="lazy"
+              />
+            </div>
+          </div>
+
           {/* Info Section */}
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
             <motion.div
@@ -379,9 +406,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
             </h3>
             <ul className="space-y-2 text-sm text-black/70">
               <li>• <strong>View Events:</strong> Browse all events across the 2nd District of Ilocos Sur</li>
-              <li>• <strong>Event Details:</strong> Click on any event to see full details including date, time, and location</li>
-              <li>• <strong>Subscribe:</strong> Subscribe to this calendar to receive notifications for upcoming events</li>
-              <li>• <strong>Share:</strong> Share specific events with friends and family</li>
+              <li>• <strong>List:</strong>Pin events</li>
             </ul>
           </motion.div>
         </div>

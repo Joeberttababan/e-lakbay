@@ -19,8 +19,40 @@ export const EventUploadModal: React.FC<EventUploadModalProps> = ({ isOpen, onCl
   const [eventEndTime, setEventEndTime] = useState('');
   const [eventLocation, setEventLocation] = useState('');
   const [eventCategory, setEventCategory] = useState<'festival' | 'cultural' | 'holiday' | 'other'>('festival');
+  const [eventImages, setEventImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      const totalImages = eventImages.length + newFiles.length;
+
+      if (totalImages > 10) {
+        setError('Maximum 10 images allowed');
+        return;
+      }
+
+      setError(null);
+      setEventImages([...eventImages, ...newFiles]);
+
+      // Create previews for new files
+      newFiles.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews((prev) => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setEventImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,6 +90,26 @@ export const EventUploadModal: React.FC<EventUploadModalProps> = ({ isOpen, onCl
         return;
       }
 
+      // Upload images to Supabase storage
+      const imageUrls: string[] = [];
+      for (const file of eventImages) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `events/${user.id}/${fileName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('uploads')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from('uploads')
+          .getPublicUrl(uploadData.path);
+
+        imageUrls.push(urlData.publicUrl);
+      }
+
       const { error: insertError } = await supabase.from('events').insert({
         title: eventTitle,
         description: eventDescription,
@@ -65,6 +117,7 @@ export const EventUploadModal: React.FC<EventUploadModalProps> = ({ isOpen, onCl
         end_date: endDateTime.toISOString(),
         location: eventLocation,
         category: eventCategory,
+        image_urls: imageUrls.length > 0 ? imageUrls : null,
         municipality_id: profile.id,
         created_by: user.id,
       });
@@ -80,6 +133,8 @@ export const EventUploadModal: React.FC<EventUploadModalProps> = ({ isOpen, onCl
       setEventEndTime('');
       setEventLocation('');
       setEventCategory('festival');
+      setEventImages([]);
+      setImagePreviews([]);
       onClose();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to add event';
@@ -241,6 +296,63 @@ export const EventUploadModal: React.FC<EventUploadModalProps> = ({ isOpen, onCl
               placeholder="e.g., Plaza Mayor, Vigan City"
               className="w-full px-4 py-2 rounded-lg border border-black/20 focus:border-black/40 focus:outline-none transition-colors"
             />
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Event Images <span className="text-black/50">(Optional, max 10)</span>
+            </label>
+            <div className="relative">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageSelect}
+                disabled={eventImages.length >= 10}
+                className="hidden"
+                id="event-images"
+              />
+              <label
+                htmlFor="event-images"
+                className="flex flex-col items-center justify-center w-full px-4 py-6 rounded-lg border-2 border-dashed border-black/20 hover:border-black/40 transition-colors cursor-pointer bg-black/5"
+              >
+                <div className="text-2xl mb-2">📸</div>
+                <p className="text-sm font-medium">Click to upload images</p>
+                <p className="text-xs text-black/60">PNG, JPG, GIF up to 10MB</p>
+              </label>
+            </div>
+
+            {/* Image Previews */}
+            {imagePreviews.length > 0 && (
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      ✕
+                    </button>
+                    <p className="text-xs text-black/60 mt-1 truncate">
+                      {eventImages[index].name}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {eventImages.length > 0 && (
+              <p className="text-xs text-black/60 mt-2">
+                {eventImages.length} of 10 images selected
+              </p>
+            )}
           </div>
 
           {/* Submit */}

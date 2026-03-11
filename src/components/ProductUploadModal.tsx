@@ -67,8 +67,9 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
   // lock background when upload modal is open
   useLockBodyScroll(open);
 
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const isMunicipalityUser = profile?.role === 'municipality';
   const [productName, setProductName] = useState('');
   const [locationData, setLocationData] = useState<LocationData | null>(null);
   const [description, setDescription] = useState('');
@@ -306,12 +307,29 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
               onChange={(event) => setProductName(event.target.value.slice(0, 64))}
               maxLength={64}
               placeholder="Ilocos Souvenir Bundle"
-              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm text-black placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+              className="rounded-lg bg-white/10 border border-[#1A1A1A]/15 px-4 py-2 text-sm text-black placeholder:text-black/70 focus:outline-none focus:ring-2 focus:ring-white/30"
             />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
+            {isMunicipalityUser && (
+              <div className="flex flex-col gap-2 rounded-lg bg-white/5 border border-white/10">
+                <label className="text-sm text-black/60">Municipality</label>
+                <div className="rounded-lg bg-white/10 border border-[#1A1A1A]/15 px-4 py-2 text-sm text-black">
+                  {profile?.municipality_name || 'N/A'}
+                </div>
+                <p className="text-xs text-black/50">Your municipality is pre-selected and cannot be changed.</p>
+              </div>
+            )}
             <label className="text-sm text-black/60">Location</label>
-            <LocationPickerMap onLocationConfirmed={setLocationData} initialLocation={locationData} hideIntro defaultPinMapOpen={false} showBarangay={false} />
+            <LocationPickerMap 
+              onLocationConfirmed={setLocationData} 
+              initialLocation={locationData} 
+              hideIntro 
+              defaultPinMapOpen={false} 
+              showBarangay={false}
+              isMunicipalityMode={isMunicipalityUser}
+              fixedMunicipality={isMunicipalityUser ? profile?.municipality_name || null : null}
+            />
             {locationData && (
               <p className="text-xs text-black/60">
                 Location: {locationData.municipality ?? 'Unknown'}
@@ -331,7 +349,7 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
               onChange={(event) => setDescription(event.target.value.slice(0, 2200))}
               maxLength={2200}
               placeholder="Describe the product..."
-              className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm text-black placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+              className="rounded-lg bg-white/10 border border-[#1A1A1A]/15 px-4 py-2 text-sm text-black placeholder:text-black/70 focus:outline-none focus:ring-2 focus:ring-white/30"
             />
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
@@ -342,7 +360,7 @@ export const ProductUploadModal: React.FC<ProductUploadModalProps> = ({
               multiple
               accept="image/*"
               onChange={handleFilesChange}
-              className="rounded-lg bg-black/5 border border-black/15 px-4 py-2 text-sm text-black file:mr-3 file:rounded-full file:border-0 file:bg-black/10 file:px-3 file:py-1 file:text-xs file:text-black"
+              className="rounded-lg bg-black/5 border border-[#1A1A1A]/15 px-4 py-2 text-sm text-black file:mr-3 file:rounded-full file:border-0 file:bg-black/10 file:px-3 file:py-1 file:text-xs file:text-black"
             />
             <p className="text-xs text-black/60">{previewCountLabel}</p>
           </div>

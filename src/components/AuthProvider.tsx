@@ -11,6 +11,7 @@ export interface Profile {
   email: string | null;
   img_url: string | null;
   battle_cry: string | null;
+  municipality_name: string | null;
 }
 
 interface AuthContextValue {

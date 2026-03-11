@@ -5,7 +5,7 @@ import type { LocationData } from '../lib/locationTypes';
 const Pin: React.FC<{ lat: number; lng: number; emoji: string; label: string }> = ({ emoji, label }) => (
   <div style={{ textAlign: 'center', transform: 'translate(-50%, -100%)' }}>
     <div style={{ fontSize: 28 }}>{emoji}</div>
-    <span style={{ fontSize: 11, background: '#fff', padding: '2px 6px', borderRadius: 4, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
+    <span style={{ fontSize: 11, background: '#fff', color: 'rgba(0,0,0,0.7)', padding: '2px 6px', borderRadius: 4, boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }}>
       {label}
     </span>
   </div>
@@ -48,25 +48,25 @@ export default function ViewRoutesModal({ destination, onClose }: ViewRoutesModa
         width: '90%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ margin: 0 }}>🗺️ Get Directions</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>✕</button>
+          <h2 style={{ margin: 0, color: '#333' }}>🗺️ Get Directions</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#333' }}>✕</button>
         </div>
 
-        <p style={{ margin: '0 0 16px', color: '#555' }}>
+        <p style={{ margin: '0 0 16px', color: '#333' }}>
           📍 Destination: <strong>{destination.barangay ?? 'Unknown'}, {destination.municipality ?? 'Unknown'}</strong>
           {destination.address && <><br /><span style={{ fontSize: 12, color: '#888' }}>{destination.address}</span></>}
         </p>
 
         {!hasCoords && (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <p>⚠️ This location is missing coordinates.</p>
+            <p style={{ color: '#888' }}>⚠️ This location is missing coordinates.</p>
           </div>
         )}
 
         {/* IDLE */}
         {status === 'idle' && hasCoords && (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <p style={{ color: '#555', marginBottom: 16 }}>Allow location access to see directions from where you are.</p>
+            <p style={{ color: '#888', marginBottom: 16 }}>Allow location access to see directions from where you are.</p>
             <button onClick={requestLocation} style={{
               padding: '12px 24px', background: '#2563eb', color: '#fff',
               border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 15, cursor: 'pointer'
@@ -89,7 +89,7 @@ export default function ViewRoutesModal({ destination, onClose }: ViewRoutesModa
         {/* UNSUPPORTED */}
         {status === 'unsupported' && hasCoords && (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <p>⚠️ Your browser doesn't support location access.</p>
+            <p style={{ color: '#888' }}>⚠️ Your browser doesn't support location access.</p>
             <a href={googleMapsLink} target="_blank" rel="noreferrer"
               style={{ padding: '10px 20px', background: '#16a34a', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>
               Open in Google Maps ↗
@@ -100,7 +100,7 @@ export default function ViewRoutesModal({ destination, onClose }: ViewRoutesModa
         {/* DENIED */}
         {status === 'denied' && hasCoords && (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
-            <p>⚠️ Location access was denied. You can still open directions in Google Maps.</p>
+            <p style={{ color: '#888' }}>⚠️ Location access was denied. You can still open directions in Google Maps.</p>
             <a href={googleMapsLink} target="_blank" rel="noreferrer"
               style={{ padding: '10px 20px', background: '#16a34a', color: '#fff', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>
               Open Google Maps ↗

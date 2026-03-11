@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, BarChart3, Calendar } from 'lucide-react';
-import { ProfilesTab, AnalyticsTab, EventsTab, VisitorAnalyticsDashboard } from '../components/admin';
+import { Users, BarChart3, Calendar, Leaf } from 'lucide-react';
+import { ProfilesTab, AnalyticsTab, EventsTab, WildlifeAdminTab, VisitorAnalyticsDashboard } from '../components/admin';
 
-type TabType = 'profiles' | 'analytics' | 'events';
+type TabType = 'profiles' | 'analytics' | 'events' | 'wildlife';
 
 const AdminPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -60,6 +60,18 @@ const AdminPage: React.FC = () => {
             <Calendar className="h-4 w-4" />
             Events
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('wildlife')}
+            className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+              activeTab === 'wildlife'
+                ? 'text-[#1A1A1A] border-b-2 border-[#1A1A1A]'
+                : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]'
+            }`}
+          >
+            <Leaf className="h-4 w-4" />
+            Wildlife
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -77,6 +89,12 @@ const AdminPage: React.FC = () => {
         )}
         {activeTab === 'profiles' && <ProfilesTab />}
         {activeTab === 'events' && <EventsTab />}
+        {activeTab === 'wildlife' && (
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-4">Wildlife Conservation Submissions</h2>
+            <WildlifeAdminTab />
+          </div>
+        )}
       </div>
     </main>
   );
