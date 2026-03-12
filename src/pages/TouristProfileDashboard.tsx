@@ -704,7 +704,7 @@ const TouristProfileDashboard: React.FC = () => {
                 key={tab}
                 type="button"
                 onClick={() => setActiveTab(tab as TabType)}
-                className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                className={`p-1 md:px-4 md:py-2 rounded-t-lg font-medium transition-colors ${
                   activeTab === tab
                     ? 'bg-black/10 text-black border-b-2 border-black'
                     : 'text-black/60 hover:text-black hover:bg-black/5'

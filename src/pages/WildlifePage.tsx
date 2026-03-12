@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { WildlifeCard } from '../components/WildlifeCard';
+import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
@@ -305,6 +306,7 @@ export const WildlifePage: React.FC<WildlifePageProps> = ({ onBackHome, onViewPr
           </div>
         )}
       </div>
+      <ScrollToTopButton />
     </main>
   );
 };

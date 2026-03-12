@@ -100,10 +100,14 @@ export const RatingModal: React.FC<RatingModalProps> = ({ open, title, onClose, 
           </button>
           <button
             type="button"
-            className="rounded-full glass-button px-5 py-2 text-sm font-semibold transition-colors"
+            className="rounded-full glass-button px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={async () => {
               if (rating === 0) {
                 toast.error('Please select a rating first.');
+                return;
+              }
+              if (!comment.trim()) {
+                toast.error('Please enter a comment.');
                 return;
               }
               if (isSubmitting) return;
@@ -114,7 +118,7 @@ export const RatingModal: React.FC<RatingModalProps> = ({ open, title, onClose, 
                 setIsSubmitting(false);
               }
             }}
-            disabled={isSubmitting}
+            disabled={isSubmitting || rating === 0 || !comment.trim()}
           >
             {isSubmitting ? 'Submitting...' : 'Submit Rating'}
           </button>

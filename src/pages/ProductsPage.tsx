@@ -7,6 +7,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { RatingModal } from '../components/RatingModal';
 import { SearchSuggest } from '../components/SearchSuggest';
+import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
 import {
@@ -407,6 +408,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
           }
         }}
       />
+      <ScrollToTopButton />
     </main>
   );
 };

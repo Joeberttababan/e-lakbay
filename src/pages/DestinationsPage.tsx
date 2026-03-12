@@ -7,6 +7,7 @@ import { DestinationCard } from '../components/DestinationCard';
 import { DestinationModalCard } from '../components/DestinationModalCard';
 import { RatingModal } from '../components/RatingModal';
 import { SearchSuggest } from '../components/SearchSuggest';
+import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
@@ -384,6 +385,7 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
           </div>
         </div>
       )}
+      <ScrollToTopButton />
     </main>
   );
 };

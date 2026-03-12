@@ -221,7 +221,7 @@ export const CommentsSlider: React.FC<CommentsSliderProps> = ({
 
               {/* Comment text */}
               {comment.comment && (
-                <p className="text-sm text-white/90 leading-relaxed">{comment.comment}</p>
+                <p className="text-sm text-black/90 leading-relaxed">{comment.comment}</p>
               )}
             </div>
           ))

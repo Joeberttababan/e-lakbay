@@ -6,6 +6,7 @@ import { DestinationCard } from '../components/DestinationCard';
 import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { RatingModal } from '../components/RatingModal';
+import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { supabase } from '../lib/supabaseClient';
 import { toast } from 'sonner';
 import { trackProfileView } from '../lib/analytics';
@@ -504,6 +505,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
           }
         }}
       />
+      <ScrollToTopButton />
     </main>
   );
 };

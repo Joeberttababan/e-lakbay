@@ -11,6 +11,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '../components/modern-ui/breadcrumb';
+import { ScrollToTopButton } from '../components/ScrollToTopButton';
 
 interface Event {
   id: string;
@@ -423,6 +424,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
           </motion.div>
         </div>
       </motion.section>
+      <ScrollToTopButton />
     </main>
   );
 };

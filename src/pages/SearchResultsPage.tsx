@@ -7,6 +7,7 @@ import { ProductCard } from '../components/ProductCard';
 import { ProductModal } from '../components/ProductModal';
 import { RatingModal } from '../components/RatingModal';
 import { GroupedSearchSuggest, GroupedSearchItem } from '../components/SearchSuggest';
+import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { DestinationTileSkeleton, ProductCardSkeleton } from '../components/ui/Skeletons';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
@@ -664,6 +665,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
           onClose={() => setRatingTarget(null)}
         />
       )}
+      <ScrollToTopButton />
     </main>
   );
 };
