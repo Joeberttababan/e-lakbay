@@ -10,6 +10,7 @@ import { SearchSuggest } from '../components/SearchSuggest';
 import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabaseClient';
+import { hasUserRatedDestination } from '../lib/ratingUtils';
 import { toast } from 'sonner';
 import { trackContentView, trackFilterUsage, trackSearchPerformed } from '../lib/analytics';
 import {
@@ -61,6 +62,7 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
   const queryClient = useQueryClient();
   const location = useLocation();
   const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string } | null>(null);
+  const [alreadyRated, setAlreadyRated] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDestinationId, setSelectedDestinationId] = useState<string | null>(null);
   const {
@@ -274,11 +276,13 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
                       });
                     }}
                     onProfileClick={onViewProfile}
-                    onRate={() => {
+                    onRate={async () => {
                       if (!user) {
                         toast.error('Please sign in to rate destinations.');
                         return;
                       }
+                      const hasRated = await hasUserRatedDestination(destination.id, user.id);
+                      setAlreadyRated(hasRated);
                       setRatingTarget({ id: destination.id, name: destination.name });
                     }}
                   />
@@ -293,6 +297,7 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
         open={Boolean(ratingTarget)}
         title={ratingTarget ? `Rate Destination: ${ratingTarget.name}` : 'Rate'}
         onClose={() => setRatingTarget(null)}
+        isAlreadyRated={alreadyRated}
         onSubmit={async (rating, comment) => {
           if (!ratingTarget || !user) return;
           try {
@@ -369,11 +374,13 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onBackHome, 
                   postedById={destination.postedById}
                   ratingAvg={destination.ratingAvg}
                   ratingCount={destination.ratingCount}
-                  onRate={() => {
+                  onRate={async () => {
                     if (!user) {
                       toast.error('Please sign in to rate destinations.');
                       return;
                     }
+                    const hasRated = await hasUserRatedDestination(destination.id, user.id);
+                    setAlreadyRated(hasRated);
                     setSelectedDestinationId(null);
                     setRatingTarget({ id: destination.id, name: destination.name });
                   }}

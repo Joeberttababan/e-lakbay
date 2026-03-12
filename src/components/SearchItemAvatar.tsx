@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../lib/utils';
 
-export type SearchItemType = 'destination' | 'product';
+export type SearchItemType = 'destination' | 'product' | 'wildlife';
 
 export interface SearchItemAvatarProps {
   id: string;
@@ -27,7 +27,9 @@ export const SearchItemAvatar: React.FC<SearchItemAvatarProps> = ({
 }) => {
   const fallbackImage = type === 'destination'
     ? '/placeholder-destination.jpg'
-    : '/placeholder-product.jpg';
+    : type === 'product'
+    ? '/placeholder-product.jpg'
+    : '/placeholder-wildlife.jpg';
 
   return (
     <button
@@ -70,7 +72,9 @@ export const SearchItemAvatar: React.FC<SearchItemAvatarProps> = ({
         'shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wide',
         type === 'destination'
           ? 'bg-emerald-500/20 text-emerald-400'
-          : 'bg-blue-500/20 text-blue-400'
+          : type === 'product'
+          ? 'bg-blue-500/20 text-blue-400'
+          : 'bg-purple-500/20 text-purple-400'
       )}>
         {type}
       </span>

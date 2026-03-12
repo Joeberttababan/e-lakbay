@@ -67,12 +67,14 @@ interface HomepageSearchWithSuggestionsProps {
   className?: string;
   onSelectDestination?: (id: string) => void;
   onSelectProduct?: (id: string) => void;
+  onSelectWildlife?: (id: string) => void;
 }
 
 export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestionsProps> = ({
   className,
   onSelectDestination,
   onSelectProduct,
+  onSelectWildlife,
 }) => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
@@ -105,6 +107,21 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Fetch wildlife for suggestions
+  const { data: wildlife = [] } = useQuery({
+    queryKey: ['homepage-search-wildlife'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('endangered_wildlife')
+        .select('id, species_name, image_url, conservation_status, municipality_id')
+        .eq('approval_status', 'approved')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // Convert to GroupedSearchItem format
   const destinationSuggestions: GroupedSearchItem[] = useMemo(() =>
     destinations.map((d) => ({
@@ -130,13 +147,27 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
     [products]
   );
 
+  const wildlifeSuggestions: GroupedSearchItem[] = useMemo(() =>
+    wildlife.map((w) => ({
+      id: w.id,
+      name: w.species_name,
+      imageUrl: w.image_url,
+      type: 'wildlife' as const,
+      meta: w.conservation_status ?? undefined,
+    })),
+    [wildlife]
+  );
+
   const handleSelectItem = (item: GroupedSearchItem) => {
     if (item.type === 'destination') {
       onSelectDestination?.(item.id);
       navigate(`/destinations?id=${item.id}`);
-    } else {
+    } else if (item.type === 'product') {
       onSelectProduct?.(item.id);
       navigate(`/products?id=${item.id}`);
+    } else if (item.type === 'wildlife') {
+      onSelectWildlife?.(item.id);
+      navigate(`/wildlife?id=${item.id}`);
     }
   };
 
@@ -150,7 +181,8 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
       onChange={setSearchValue}
       destinations={destinationSuggestions}
       products={productSuggestions}
-      placeholder="Search destinations, products..."
+      wildlife={wildlifeSuggestions}
+      placeholder="Search destinations, products, wildlife..."
       onSelectItem={handleSelectItem}
       onSearch={handleSearch}
       className={className}

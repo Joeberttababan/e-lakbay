@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLockBodyScroll } from '../lib/useLockBodyScroll';
-import { Star } from 'lucide-react';
+import { Star, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface RatingModalProps {
@@ -8,9 +8,10 @@ interface RatingModalProps {
   title: string;
   onClose: () => void;
   onSubmit?: (rating: number, comment: string) => void | Promise<void>;
+  isAlreadyRated?: boolean;
 }
 
-export const RatingModal: React.FC<RatingModalProps> = ({ open, title, onClose, onSubmit }) => {
+export const RatingModal: React.FC<RatingModalProps> = ({ open, title, onClose, onSubmit, isAlreadyRated = false }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,7 +45,11 @@ export const RatingModal: React.FC<RatingModalProps> = ({ open, title, onClose, 
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-semibold" id="rating-modal-title">{title}</h2>
-            <p className="text-sm modal-stone-muted">Share your experience with a quick rating.</p>
+            {isAlreadyRated ? (
+              <p className="text-sm modal-stone-muted">You have already rated this item.</p>
+            ) : (
+              <p className="text-sm modal-stone-muted">Share your experience with a quick rating.</p>
+            )}
           </div>
           <button
             type="button"
@@ -56,39 +61,51 @@ export const RatingModal: React.FC<RatingModalProps> = ({ open, title, onClose, 
           </button>
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              onClick={() => setRating(star)}
-              className={`transition-colors ${rating >= star ? 'text-yellow-300' : 'modal-stone-soft'}`}
-              aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
-            >
-              <Star
-                className="h-6 w-6"
-                fill={rating >= star ? 'currentColor' : 'none'}
-              />
-            </button>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm modal-stone-muted">Comment</label>
-            <span className={`text-xs ${comment.length > 200 ? 'text-red-400' : 'modal-stone-soft'}`}>
-              {comment.length}/200
-            </span>
+        {isAlreadyRated ? (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30 mb-6">
+            <AlertCircle className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-medium text-yellow-100">You can only rate each item once</p>
+              <p className="text-xs text-yellow-100/80 mt-1">You've already submitted your rating for this item. Thank you for your feedback!</p>
+            </div>
           </div>
-          <textarea
-            rows={4}
-            placeholder="Share your thoughts..."
-            value={comment}
-            onChange={(event) => setComment(event.target.value.slice(0, 200))}
-            maxLength={200}
-            className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
-          />
-        </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 mb-4">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  className={`transition-colors ${rating >= star ? 'text-yellow-300' : 'modal-stone-soft'}`}
+                  aria-label={`Rate ${star} star${star > 1 ? 's' : ''}`}
+                >
+                  <Star
+                    className="h-6 w-6"
+                    fill={rating >= star ? 'currentColor' : 'none'}
+                  />
+                </button>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm modal-stone-muted">Comment</label>
+                <span className={`text-xs ${comment.length > 200 ? 'text-red-400' : 'modal-stone-soft'}`}>
+                  {comment.length}/200
+                </span>
+              </div>
+              <textarea
+                rows={4}
+                placeholder="Share your thoughts..."
+                value={comment}
+                onChange={(event) => setComment(event.target.value.slice(0, 200))}
+                maxLength={200}
+                className="rounded-lg bg-white/10 border border-white/15 px-4 py-2 text-sm modal-stone-text placeholder:text-primary focus:outline-none focus:ring-2 focus:ring-white/30"
+              />
+            </div>
+          </>
+        )}
 
         <div className="mt-6 flex justify-end gap-3">
           <button
@@ -96,32 +113,34 @@ export const RatingModal: React.FC<RatingModalProps> = ({ open, title, onClose, 
             className="text-sm modal-stone-muted hover:opacity-80"
             onClick={onClose}
           >
-            Cancel
+            {isAlreadyRated ? 'Close' : 'Cancel'}
           </button>
-          <button
-            type="button"
-            className="rounded-full glass-button px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={async () => {
-              if (rating === 0) {
-                toast.error('Please select a rating first.');
-                return;
-              }
-              if (!comment.trim()) {
-                toast.error('Please enter a comment.');
-                return;
-              }
-              if (isSubmitting) return;
-              setIsSubmitting(true);
-              try {
-                await onSubmit?.(rating, comment);
-              } finally {
-                setIsSubmitting(false);
-              }
-            }}
-            disabled={isSubmitting || rating === 0 || !comment.trim()}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Rating'}
-          </button>
+          {!isAlreadyRated && (
+            <button
+              type="button"
+              className="rounded-full glass-button px-5 py-2 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={async () => {
+                if (rating === 0) {
+                  toast.error('Please select a rating first.');
+                  return;
+                }
+                if (!comment.trim()) {
+                  toast.error('Please enter a comment.');
+                  return;
+                }
+                if (isSubmitting) return;
+                setIsSubmitting(true);
+                try {
+                  await onSubmit?.(rating, comment);
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+              disabled={isSubmitting || rating === 0 || !comment.trim()}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Rating'}
+            </button>
+          )}
         </div>
       </div>
     </div>

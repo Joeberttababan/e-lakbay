@@ -1,56 +1,33 @@
-ENDANGERED_WILDLIFE TABLE
-=========================
+create table public.endangered_wildlife (
+  id uuid not null default gen_random_uuid (),
+  species_name character varying(255) not null,
+  description text null,
+  conservation_status character varying(100) null,
+  image_url text null,
+  image_urls text[] null default array[]::text[],
+  municipality_id uuid null,
+  approval_status character varying(50) null default 'pending'::character varying,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint endangered_wildlife_pkey primary key (id),
+  constraint endangered_wildlife_municipality_id_fkey foreign KEY (municipality_id) references profiles (id) on delete CASCADE,
+  constraint status_check check (
+    (
+      (approval_status)::text = any (
+        (
+          array[
+            'pending'::character varying,
+            'approved'::character varying,
+            'declined'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
 
-Purpose: Stores information about endangered species uploaded by municipalities in Ilocos Sur
+create index IF not exists idx_endangered_wildlife_municipality_id on public.endangered_wildlife using btree (municipality_id) TABLESPACE pg_default;
 
-Fields:
-- id (uuid): Primary key, auto-generated
-- species_name (varchar 255): Name of the endangered species (REQUIRED)
-- description (text): Detailed description of the species, habitat, threats, etc.
-- conservation_status (varchar 100): Conservation classification
-  * 'Critically Endangered' - extremely high risk of extinction
-  * 'Endangered' - high risk of extinction
-  * 'Vulnerable' - moderate risk of extinction
-  * 'Near Threatened' - approaching threatened status
-- image_url (text): URL of the primary/featured image
-- image_urls (text[]): Array of all uploaded image URLs
-- municipality_id (uuid): Foreign key to profiles table (municipality that uploaded)
-- approval_status (varchar 50): Current status of submission
-  * 'pending' - waiting for admin review
-  * 'approved' - approved and visible to public
-  * 'declined' - rejected by admin, not visible to public
-- created_at (timestamp): When the upload was created
-- updated_at (timestamp): When the record was last modified
+create index IF not exists idx_endangered_wildlife_approval_status on public.endangered_wildlife using btree (approval_status) TABLESPACE pg_default;
 
-Indexes:
-- municipality_id: For filtering by uploading municipality
-- approval_status: For filtering by status
-- created_at: For sorting by most recent
-
-
-WILDLIFE_RATINGS TABLE
-======================
-
-Purpose: Stores user ratings/reviews of endangered wildlife species
-
-Fields:
-- id (uuid): Primary key, auto-generated
-- wildlife_id (uuid): Foreign key to endangered_wildlife table
-- user_id (uuid): Foreign key to profiles table (tourist rating the species)
-- rating (integer): Numeric rating (1-5 stars)
-- created_at (timestamp): When the rating was submitted
-
-Constraints:
-- One rating per user per wildlife item (UNIQUE constraint)
-- Rating must be between 1-5
-
-Indexes:
-- wildlife_id: For fetching all ratings for a species
-- user_id: For fetching all ratings by a user
-
-Data Flow:
-1. Municipality uploads endangered species → endangered_wildlife created with status 'pending'
-2. Admin reviews submission → updates approval_status to 'approved' or 'declined'
-3. If approved → wildlife becomes visible on Wildlife Conservation page
-4. Tourists can rate approved wildlife → wildlife_ratings records created
-5. Average rating displayed on wildlife card
+create index IF not exists idx_endangered_wildlife_created_at on public.endangered_wildlife using btree (created_at desc) TABLESPACE pg_default;

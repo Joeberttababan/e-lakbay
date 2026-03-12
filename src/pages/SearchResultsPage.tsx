@@ -4,6 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { DestinationCard } from '../components/DestinationCard';
 import { ProductCard } from '../components/ProductCard';
+import { WildlifeCard } from '../components/WildlifeCard';
 import { ProductModal } from '../components/ProductModal';
 import { RatingModal } from '../components/RatingModal';
 import { GroupedSearchSuggest, GroupedSearchItem } from '../components/SearchSuggest';
@@ -26,7 +27,7 @@ interface SearchResultsPageProps {
   onViewProfile?: (profileId: string) => void;
 }
 
-type FilterType = 'all' | 'destination' | 'product';
+type FilterType = 'all' | 'destination' | 'product' | 'wildlife';
 type SortOption = 'relevant' | 'rating-high' | 'rating-low' | 'newest';
 
 interface DestinationResult {
@@ -69,6 +70,26 @@ interface ProductResult {
     lng: number | null;
     address: string | null;
   };
+}
+
+interface WildlifeResult {
+  id: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  imageUrls: string[];
+  conservationStatus: string | null;
+  municipalityName: string | null;
+  municipalityImageUrl: string | null;
+  comments?: Array<{
+    id: string;
+    user_id: string;
+    comment_text: string;
+    created_at: string;
+    user_name?: string;
+    user_image_url?: string;
+  }>;
+  createdAt?: string | null;
 }
 
 type ActiveProduct = {
@@ -237,6 +258,90 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
     },
   });
 
+  // Fetch all wildlife
+  const { data: wildlife = [], isPending: isWildlifePending } = useQuery({
+    queryKey: ['search-wildlife'],
+    queryFn: async () => {
+      try {
+        const { data: wildlifeRows, error: wildlifeError } = await supabase
+          .from('endangered_wildlife')
+          .select(`
+            id,
+            species_name,
+            description,
+            conservation_status,
+            image_url,
+            image_urls,
+            created_at,
+            municipality_id,
+            approval_status,
+            profiles:municipality_id (
+              full_name,
+              img_url
+            )
+          `)
+          .eq('approval_status', 'approved')
+          .order('created_at', { ascending: false });
+
+        if (wildlifeError) throw wildlifeError;
+
+        // Fetch comments for each wildlife item
+        const wildlifeWithComments = await Promise.all(
+          (wildlifeRows || []).map(async (item: any) => {
+            const { data: commentsRows } = await supabase
+              .from('wildlife_comments')
+              .select(`
+                id,
+                user_id,
+                comment_text,
+                created_at,
+                profiles:user_id (
+                  full_name,
+                  img_url
+                )
+              `)
+              .eq('wildlife_id', item.id)
+              .order('created_at', { ascending: false });
+
+            // Map comments to include user info
+            const comments = (commentsRows || []).map((comment: any) => {
+              const profileData = Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles;
+              return {
+                id: comment.id,
+                user_id: comment.user_id,
+                comment_text: comment.comment_text,
+                created_at: comment.created_at,
+                user_name: profileData?.full_name || 'Anonymous',
+                user_image_url: profileData?.img_url,
+              };
+            });
+
+            // Handle profiles as either array or object
+            const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+
+            return {
+              id: item.id,
+              name: item.species_name,
+              description: item.description,
+              imageUrl: item.image_url,
+              imageUrls: item.image_urls || [],
+              conservationStatus: item.conservation_status,
+              municipalityName: profileData?.full_name || 'Unknown Municipality',
+              municipalityImageUrl: profileData?.img_url,
+              comments,
+              createdAt: item.created_at,
+            } as WildlifeResult;
+          })
+        );
+
+        return wildlifeWithComments;
+      } catch (error) {
+        console.error('Error fetching wildlife:', error);
+        return [];
+      }
+    },
+  });
+
   // Convert to GroupedSearchItem format for search suggestions
   const destinationSuggestions: GroupedSearchItem[] = useMemo(() =>
     destinations.map((d) => ({
@@ -262,6 +367,17 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
     [products]
   );
 
+  const wildlifeSuggestions: GroupedSearchItem[] = useMemo(() =>
+    wildlife.map((w) => ({
+      id: w.id,
+      name: w.name,
+      imageUrl: w.imageUrl,
+      type: 'wildlife' as const,
+      meta: w.conservationStatus ?? undefined,
+    })),
+    [wildlife]
+  );
+
   // Filter results based on search query
   const filteredDestinations = useMemo(() => {
     const query = queryParam.toLowerCase();
@@ -285,16 +401,33 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
     });
   }, [products, queryParam]);
 
+  const filteredWildlife = useMemo(() => {
+    const query = queryParam.toLowerCase();
+    if (!query) return wildlife;
+    return wildlife.filter((w) => {
+      const name = w.name.toLowerCase();
+      const description = w.description?.toLowerCase() ?? '';
+      const status = w.conservationStatus?.toLowerCase() ?? '';
+      const municipality = w.municipalityName?.toLowerCase() ?? '';
+      return name.includes(query) || description.includes(query) || status.includes(query) || municipality.includes(query);
+    });
+  }, [wildlife, queryParam]);
+
   // Apply filters (type and rating)
   const displayDestinations = useMemo(() => {
-    if (filterType === 'product') return [];
+    if (filterType === 'product' || filterType === 'wildlife') return [];
     return filteredDestinations.filter((d) => (d.ratingAvg ?? 0) >= minRating);
   }, [filteredDestinations, filterType, minRating]);
 
   const displayProducts = useMemo(() => {
-    if (filterType === 'destination') return [];
+    if (filterType === 'destination' || filterType === 'wildlife') return [];
     return filteredProducts.filter((p) => (p.ratingAvg ?? 0) >= minRating);
   }, [filteredProducts, filterType, minRating]);
+
+  const displayWildlife = useMemo(() => {
+    if (filterType === 'destination' || filterType === 'product') return [];
+    return filteredWildlife;
+  }, [filteredWildlife, filterType]);
 
   // Sort results
   const sortedDestinations = useMemo(() => {
@@ -325,8 +458,16 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
     }
   }, [displayProducts, sortOption]);
 
-  const totalResults = sortedDestinations.length + sortedProducts.length;
-  const isLoading = isDestinationsPending || isProductsPending;
+  const sortedWildlife = useMemo(() => {
+    const sorted = [...displayWildlife];
+    if (sortOption === 'newest') {
+      return sorted.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+    }
+    return sorted;
+  }, [displayWildlife, sortOption]);
+
+  const totalResults = sortedDestinations.length + sortedProducts.length + sortedWildlife.length;
+  const isLoading = isDestinationsPending || isProductsPending || isWildlifePending;
 
   // Track page view
   useEffect(() => {
@@ -348,8 +489,10 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
   const handleSelectItem = (item: GroupedSearchItem) => {
     if (item.type === 'destination') {
       navigate(`/destinations?id=${item.id}`);
-    } else {
+    } else if (item.type === 'product') {
       navigate(`/products?id=${item.id}`);
+    } else if (item.type === 'wildlife') {
+      navigate(`/wildlife?id=${item.id}`);
     }
   };
 
@@ -412,7 +555,8 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
             onChange={setSearchQuery}
             destinations={destinationSuggestions}
             products={productSuggestions}
-            placeholder="Search destinations, products..."
+            wildlife={wildlifeSuggestions}
+            placeholder="Search destinations, products, wildlife..."
             onSelectItem={handleSelectItem}
             onSearch={handleSearch}
             className="w-full max-w-2xl"
@@ -430,7 +574,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
           <div className="flex items-center gap-2">
             <span className="text-sm text-black/70">Type:</span>
             <div className="flex gap-1">
-              {(['all', 'destination', 'product'] as FilterType[]).map((type) => (
+              {(['all', 'destination', 'product', 'wildlife'] as FilterType[]).map((type) => (
                 <button
                   key={type}
                   onClick={() => handleFilterChange(type)}
@@ -440,7 +584,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
                       : 'bg-[#E8E8E8] text-black hover:bg-[#E8E8E8]/80'
                   }`}
                 >
-                  {type === 'all' ? 'All' : type === 'destination' ? 'Destinations' : 'Products'}
+                  {type === 'all' ? 'All' : type === 'destination' ? 'Destinations' : type === 'product' ? 'Products' : 'Wildlife'}
                 </button>
               ))}
             </div>
@@ -495,6 +639,14 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {Array.from({ length: 5 }).map((_, index) => (
                   <ProductCardSkeleton key={`prod-skeleton-${index}`} />
+                ))}
+              </div>
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Wildlife</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 3 }).map((_, index) => (
+                  <div key={`wildlife-skeleton-${index}`} className="bg-black/5 rounded-lg h-80 animate-pulse" />
                 ))}
               </div>
             </div>
@@ -620,6 +772,46 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
                         })}
                         onRate={() => setRatingTarget({ id: prod.id, name: prod.name, type: 'product' })}
                         onProfileClick={onViewProfile}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Wildlife Section */}
+            {sortedWildlife.length > 0 && (
+              <section>
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3 mb-6"
+                >
+                  <div className="h-8 w-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                    <svg className="h-5 w-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 14l6-6m-6 6l-6-6m6 6l6 6m-6-6l-6 6" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold">
+                    Wildlife ({sortedWildlife.length})
+                  </h2>
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedWildlife.map((item, index) => (
+                    <motion.div key={item.id} {...getItemMotion(index)}>
+                      <WildlifeCard
+                        id={item.id}
+                        speciesName={item.name}
+                        description={item.description}
+                        conservationStatus={item.conservationStatus}
+                        imageUrl={item.imageUrl}
+                        imageUrls={item.imageUrls}
+                        municipalityName={item.municipalityName || 'Unknown Municipality'}
+                        municipalityImageUrl={item.municipalityImageUrl}
+                        comments={item.comments}
+                        onAddComment={async () => {}}
+                        onViewProfile={onViewProfile}
                       />
                     </motion.div>
                   ))}

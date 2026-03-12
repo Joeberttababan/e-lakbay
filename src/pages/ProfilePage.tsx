@@ -8,6 +8,7 @@ import { ProductModal } from '../components/ProductModal';
 import { RatingModal } from '../components/RatingModal';
 import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { supabase } from '../lib/supabaseClient';
+import { hasUserRatedDestination, hasUserRatedProduct } from '../lib/ratingUtils';
 import { toast } from 'sonner';
 import { trackProfileView } from '../lib/analytics';
 import { useAuth } from '../components/AuthProvider';
@@ -92,6 +93,8 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
   const [destinationRatingTarget, setDestinationRatingTarget] = useState<{ id: string; name: string } | null>(null);
   const [productRatingTarget, setProductRatingTarget] = useState<{ id: string; name: string } | null>(null);
   const [activeProduct, setActiveProduct] = useState<ActiveProduct | null>(null);
+  const [destinationAlreadyRated, setDestinationAlreadyRated] = useState(false);
+  const [productAlreadyRated, setProductAlreadyRated] = useState(false);
 
   useEffect(() => {
     void trackProfileView({
@@ -350,7 +353,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
                     location={destination.location}
                     showDescription
                     enableModal
-                    onRate={() => {
+                    onRate={async () => {
+                      if (!user) {
+                        toast.error('You must be signed in to rate.');
+                        return;
+                      }
+                      const hasRated = await hasUserRatedDestination(destination.id, user.id);
+                      setDestinationAlreadyRated(hasRated);
                       setDestinationRatingTarget({ id: destination.id, name: destination.name });
                     }}
                   />
@@ -399,7 +408,13 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
                         location: product.location,
                       })
                     }
-                    onRate={() => {
+                    onRate={async () => {
+                      if (!user) {
+                        toast.error('You must be signed in to rate.');
+                        return;
+                      }
+                      const hasRated = await hasUserRatedProduct(product.id, user.id);
+                      setProductAlreadyRated(hasRated);
                       setProductRatingTarget({ id: product.id, name: product.name });
                     }}
                   />
@@ -414,6 +429,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
         open={Boolean(destinationRatingTarget)}
         title={destinationRatingTarget ? `Rate Destination: ${destinationRatingTarget.name}` : 'Rate'}
         onClose={() => setDestinationRatingTarget(null)}
+        isAlreadyRated={destinationAlreadyRated}
         onSubmit={async (rating, comment) => {
           if (!destinationRatingTarget) return;
           if (!user) {
@@ -456,8 +472,14 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
             : null
         }
         onClose={() => setActiveProduct(null)}
-        onRate={() => {
+        onRate={async () => {
           if (!activeProduct) return;
+          if (!user) {
+            toast.error('You must be signed in to rate.');
+            return;
+          }
+          const hasRated = await hasUserRatedProduct(activeProduct.id, user.id);
+          setProductAlreadyRated(hasRated);
           setProductRatingTarget({ id: activeProduct.id, name: activeProduct.name });
         }}
       />
@@ -466,6 +488,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
         open={Boolean(productRatingTarget)}
         title={productRatingTarget ? `Rate Product: ${productRatingTarget.name}` : 'Rate'}
         onClose={() => setProductRatingTarget(null)}
+        isAlreadyRated={productAlreadyRated}
         onSubmit={async (rating, comment) => {
           if (!productRatingTarget) return;
           if (!user) {

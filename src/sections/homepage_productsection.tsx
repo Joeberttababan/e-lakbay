@@ -6,6 +6,7 @@ import { ProductModal } from '../components/ProductModal';
 import { ProductCard } from '../components/ProductCard';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabaseClient';
+import { hasUserRatedProduct } from '../lib/ratingUtils';
 import { toast } from 'sonner';
 import { trackContentView } from '../lib/analytics';
 
@@ -65,6 +66,7 @@ export const HomepageProductSection: React.FC<HomepageProductSectionProps> = ({
     name: string;
     id: string;
   } | null>(null);
+  const [alreadyRated, setAlreadyRated] = useState(false);
 
   const {
     data: localProducts = [],
@@ -256,12 +258,14 @@ export const HomepageProductSection: React.FC<HomepageProductSectionProps> = ({
         product={activeProduct}
         onClose={() => setActiveProduct(null)}
         onProfileClick={onViewProfile}
-        onRate={() => {
+        onRate={async () => {
           if (!activeProduct) return;
           if (!user) {
             toast.error('Please sign in to rate products.');
             return;
           }
+          const hasRated = await hasUserRatedProduct(activeProduct.id, user.id);
+          setAlreadyRated(hasRated);
           setRatingTarget({ type: 'Product', name: activeProduct.name, id: activeProduct.id });
         }}
       />
@@ -270,6 +274,7 @@ export const HomepageProductSection: React.FC<HomepageProductSectionProps> = ({
         open={Boolean(ratingTarget)}
         title={ratingTarget ? `Rate ${ratingTarget.type}: ${ratingTarget.name}` : 'Rate'}
         onClose={() => setRatingTarget(null)}
+        isAlreadyRated={alreadyRated}
         onSubmit={async (rating, comment) => {
           if (!ratingTarget || !user) return;
           try {

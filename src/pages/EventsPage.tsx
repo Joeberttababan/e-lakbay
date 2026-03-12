@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Search } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
 import { toast } from 'sonner';
@@ -36,6 +37,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
   const [loading, setLoading] = useState(true);
   const [pinnedEventIds, setPinnedEventIds] = useState<Set<string>>(new Set());
   const [pinningEventId, setPinningEventId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -170,6 +172,19 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
     }
   };
 
+  // Filter events based on search query
+  const filteredEvents = React.useMemo(() => {
+    if (!searchQuery.trim()) return events;
+    const query = searchQuery.toLowerCase();
+    return events.filter((event) => {
+      const title = event.title.toLowerCase();
+      const description = event.description?.toLowerCase() ?? '';
+      const location = event.location?.toLowerCase() ?? '';
+      const category = event.category.toLowerCase();
+      return title.includes(query) || description.includes(query) || location.includes(query) || category.includes(query);
+    });
+  }, [events, searchQuery]);
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-black pt-24 md:pt-28 pb-12">
       {/* Header Section */}
@@ -211,6 +226,33 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
         </div>
       </motion.section>
 
+      {/* Search Bar Section */}
+      <motion.section
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="px-4 sm:px-6 lg:px-10 mb-10"
+      >
+        <div className="max-w-7xl mx-auto flex justify-center">
+          <div className="w-full max-w-2xl">
+            <label htmlFor="event-search" className="block text-sm font-medium mb-2">
+              Search Events
+            </label>
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-black/40 pointer-events-none" />
+              <input
+                id="event-search"
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by event name, location, category..."
+                className="w-full pl-11 pr-4 py-2.5 bg-white border border-black/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black text-sm md:text-base transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      </motion.section>
+
       {/* Database Events Section */}
       <motion.section
         initial={{ opacity: 0, y: 20 }}
@@ -219,11 +261,13 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
         className="px-4 sm:px-6 lg:px-10"
       >
         <div className="max-w-7xl mx-auto">
-          {!loading && events.length > 0 && (
+          {!loading && filteredEvents.length > 0 && (
             <div className="mt-12">
-              <h2 className="text-2xl font-bold mb-6">Upcoming Municipality Events</h2>
+              <h2 className="text-2xl font-bold mb-6">
+                {searchQuery ? `Search Results (${filteredEvents.length})` : 'Upcoming Municipality Events'}
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map((event) => (
+                {filteredEvents.map((event) => (
                   <motion.div
                     key={event.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -329,6 +373,15 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
             <div className="mt-12 p-8 rounded-lg bg-slate-100 border border-slate-300 text-center">
               <p className="text-black/70">
                 No municipality events posted yet. Stay tuned for upcoming celebrations and events from our municipalities!
+              </p>
+            </div>
+          )}
+
+          {/* No Search Results Message */}
+          {!loading && events.length > 0 && filteredEvents.length === 0 && (
+            <div className="mt-12 p-8 rounded-lg bg-slate-100 border border-slate-300 text-center">
+              <p className="text-black/70">
+                No events found matching "{searchQuery}". Try a different search term.
               </p>
             </div>
           )}

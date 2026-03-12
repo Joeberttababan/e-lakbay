@@ -7,6 +7,7 @@ import { RatingModal } from '../components/RatingModal';
 import { DestinationCard } from '../components/DestinationCard';
 import { useAuth } from '../components/AuthProvider';
 import { supabase } from '../lib/supabaseClient';
+import { hasUserRatedDestination } from '../lib/ratingUtils';
 import { toast } from 'sonner';
 import { trackContentView } from '../lib/analytics';
 
@@ -62,6 +63,7 @@ export const HomepageTopDestinationsSection: React.FC<HomepageTopDestinationsSec
     };
   } | null>(null);
   const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string } | null>(null);
+  const [alreadyRated, setAlreadyRated] = useState(false);
 
   // ensure body can't scroll while a destination modal is open
   useLockBodyScroll(Boolean(activeDestination));
@@ -280,11 +282,13 @@ export const HomepageTopDestinationsSection: React.FC<HomepageTopDestinationsSec
               ratingCount={activeDestination.ratingCount}
               location={activeDestination.location}
               onProfileClick={onViewProfile}
-              onRate={() => {
+              onRate={async () => {
                 if (!user) {
                   toast.error('Please sign in to rate destinations.');
                   return;
                 }
+                const hasRated = await hasUserRatedDestination(activeDestination.id, user.id);
+                setAlreadyRated(hasRated);
                 setRatingTarget({ id: activeDestination.id, name: activeDestination.name });
               }}
             />
@@ -296,6 +300,7 @@ export const HomepageTopDestinationsSection: React.FC<HomepageTopDestinationsSec
         open={Boolean(ratingTarget)}
         title={ratingTarget ? `Rate Destination: ${ratingTarget.name}` : 'Rate'}
         onClose={() => setRatingTarget(null)}
+        isAlreadyRated={alreadyRated}
         onSubmit={async (rating, comment) => {
           if (!ratingTarget || !user) return;
           try {

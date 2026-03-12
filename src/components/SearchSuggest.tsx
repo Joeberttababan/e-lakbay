@@ -37,6 +37,7 @@ interface GroupedSearchSuggestProps {
   onChange: (value: string) => void;
   destinations: GroupedSearchItem[];
   products: GroupedSearchItem[];
+  wildlife: GroupedSearchItem[];
   placeholder?: string;
   className?: string;
   maxSuggestionsPerGroup?: number;
@@ -128,7 +129,8 @@ export const GroupedSearchSuggest: React.FC<GroupedSearchSuggestProps> = ({
   onChange,
   destinations,
   products,
-  placeholder = 'Search destinations, products...',
+  wildlife = [],
+  placeholder = 'Search destinations, products, wildlife...',
   className,
   maxSuggestionsPerGroup = 5,
   onSelectItem,
@@ -163,8 +165,21 @@ export const GroupedSearchSuggest: React.FC<GroupedSearchSuggestProps> = ({
       .slice(0, maxSuggestionsPerGroup);
   }, [products, maxSuggestionsPerGroup, value]);
 
-  const hasResults = filteredDestinations.length > 0 || filteredProducts.length > 0;
-  const totalResults = filteredDestinations.length + filteredProducts.length;
+  // Filter wildlife based on search query
+  const filteredWildlife = useMemo(() => {
+    const query = value.trim().toLowerCase();
+    if (!query || !wildlife) return [];
+    return wildlife
+      .filter((item) => {
+        const name = item.name.toLowerCase();
+        const meta = item.meta?.toLowerCase() ?? '';
+        return name.includes(query) || meta.includes(query);
+      })
+      .slice(0, maxSuggestionsPerGroup);
+  }, [wildlife, maxSuggestionsPerGroup, value]);
+
+  const hasResults = filteredDestinations.length > 0 || filteredProducts.length > 0 || filteredWildlife.length > 0;
+  const totalResults = filteredDestinations.length + filteredProducts.length + filteredWildlife.length;
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -275,6 +290,29 @@ export const GroupedSearchSuggest: React.FC<GroupedSearchSuggestProps> = ({
                         name={item.name}
                         imageUrl={item.imageUrl}
                         type="product"
+                        meta={item.meta}
+                        onClick={() => handleSelectItem(item)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Wildlife group */}
+                {filteredWildlife.length > 0 && (
+                  <div className={filteredDestinations.length > 0 || filteredProducts.length > 0 ? 'border-t border-white/10 mt-2 pt-2' : ''}>
+                    <div className="px-4 py-2 text-xs font-semibold text-purple-400 uppercase tracking-wider flex items-center gap-2">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 14l6-6m-6 6l-6-6m6 6l6 6m-6-6l-6 6" />
+                      </svg>
+                      Wildlife
+                    </div>
+                    {filteredWildlife.map((item) => (
+                      <SearchItemAvatar
+                        key={`wildlife-${item.id}`}
+                        id={item.id}
+                        name={item.name}
+                        imageUrl={item.imageUrl}
+                        type="wildlife"
                         meta={item.meta}
                         onClick={() => handleSelectItem(item)}
                       />

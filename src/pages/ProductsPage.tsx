@@ -9,6 +9,7 @@ import { RatingModal } from '../components/RatingModal';
 import { SearchSuggest } from '../components/SearchSuggest';
 import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { supabase } from '../lib/supabaseClient';
+import { hasUserRatedProduct } from '../lib/ratingUtils';
 import { toast } from 'sonner';
 import {
   Breadcrumb,
@@ -81,6 +82,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
   const queryClient = useQueryClient();
   const location = useLocation();
   const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string } | null>(null);
+  const [alreadyRated, setAlreadyRated] = useState(false);
   const [activeProduct, setActiveProduct] = useState<ActiveProduct | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
@@ -323,11 +325,13 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
                         location: product.location,
                       });
                     }}
-                    onRate={() => {
+                    onRate={async () => {
                       if (!user) {
                         toast.error('Please sign in to rate products.');
                         return;
                       }
+                      const hasRated = await hasUserRatedProduct(product.id, user.id);
+                      setAlreadyRated(hasRated);
                       setRatingTarget({ id: product.id, name: product.name });
                     }}
                   />
@@ -343,12 +347,14 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
         product={activeProduct}
         onClose={() => setActiveProduct(null)}
         onProfileClick={onViewProfile}
-        onRate={() => {
+        onRate={async () => {
           if (!activeProduct) return;
           if (!user) {
             toast.error('Please sign in to rate products.');
             return;
           }
+          const hasRated = await hasUserRatedProduct(activeProduct.id, user.id);
+          setAlreadyRated(hasRated);
           setRatingTarget({ id: activeProduct.id, name: activeProduct.name });
         }}
       />
@@ -357,6 +363,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
         open={Boolean(ratingTarget)}
         title={ratingTarget ? `Rate Product: ${ratingTarget.name}` : 'Rate'}
         onClose={() => setRatingTarget(null)}
+        isAlreadyRated={alreadyRated}
         onSubmit={async (rating, comment) => {
           if (!ratingTarget || !user) return;
           try {
