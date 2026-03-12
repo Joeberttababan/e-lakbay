@@ -452,14 +452,16 @@ export const DashboardDestinationCard: React.FC<DashboardDestinationCardProps> =
   const footerActions = (
     <FooterActionsContainer
       onRate={undefined}
-      hasLocation={Boolean(location)}
+      hasLocation={hasLocation}
       onViewRoutes={() => {
         if (!location) return;
-        const googleMapsLink = getGoogleMapsLink(location);
+        const googleMapsLink = getGoogleMapsLink(location, title);
         window.open(googleMapsLink, '_blank', 'noopener,noreferrer');
       }}
       detailsOpen={detailsOpen}
       onCloseDetails={() => setDetailsOpen(false)}
+      destination={location}
+      destinationName={title}
     />
   );
 

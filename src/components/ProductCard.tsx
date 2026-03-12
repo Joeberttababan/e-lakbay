@@ -17,6 +17,7 @@ interface ProductCardProps {
   onProfileClick?: (profileId: string) => void;
   showDescription?: boolean;
   showMeta?: boolean;
+  showTitle?: boolean;
   imageClassName?: string;
   className?: string;
   onClick?: () => void;
@@ -47,6 +48,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onProfileClick,
   showDescription = false,
   showMeta = true,
+  showTitle = true,
   imageClassName,
   className,
   onClick,
@@ -64,13 +66,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div className="flex flex-col h-full text-black ">
       <div className={cardImageClassName}>
         <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
-        <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-xs text-white">
-          <Star className="h-3.5 w-3.5 text-yellow-300" fill="currentColor" />
+        <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/60 px-2.5 py-1 text-[10px] text-white">
+          <Star className="h-3 w-3 text-yellow-300" fill="currentColor" />
           <span>{formatRating(ratingAvg, ratingCount)}</span>
         </div>
-        <div className="absolute inset-x-0 bottom-0 p-2">
+        {showTitle && (
+          <div className="absolute inset-x-0 bottom-0 p-2">
             <p className="text-sm font-semibold text-white line-clamp-2">{title}</p>
-        </div>
+          </div>
+        )}
       </div>
       {(shouldShowUploader || shouldShowMeta || shouldShowDescription || onRate || hasLocation) && (
         <div className="px-3 pb-3 pt-2">

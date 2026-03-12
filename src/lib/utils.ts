@@ -64,8 +64,16 @@ export const validateAuthForm = (mode: AuthMode, form: AuthFormState): string | 
   return null;
 };
 
-export const getGoogleMapsLink = (location: LocationData): string => {
+export const getGoogleMapsLink = (location: LocationData, destinationName?: string): string => {
   const hasCoords = typeof location.lat === 'number' && typeof location.lng === 'number';
+
+  if (destinationName) {
+    // If destination name is provided, use it for search with coordinates if available
+    if (hasCoords) {
+      return `https://www.google.com/maps/search/${encodeURIComponent(destinationName)}/@${location.lat},${location.lng},15z`;
+    }
+    return `https://www.google.com/maps/search/${encodeURIComponent(destinationName)}`;
+  }
 
   if (!hasCoords) {
     if (location.municipality) {
@@ -75,6 +83,55 @@ export const getGoogleMapsLink = (location: LocationData): string => {
   }
 
   return `https://www.google.com/maps/dir/?api=1&destination=${location.lat},${location.lng}`;
+};
+
+export const getDirectionsLink = (originLat: number, originLng: number, destinationLat: number, destinationLng: number, destinationName?: string): string => {
+  const origin = `${originLat},${originLng}`;
+  const destination = `${destinationLat},${destinationLng}`;
+  
+  if (destinationName) {
+    return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&dir_action=navigate`;
+  }
+  
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+};
+
+export const getDirectionsLinkFromPlace = (originPlace: string, destinationLat: number, destinationLng: number, destinationName?: string): string => {
+  const destination = `${destinationLat},${destinationLng}`;
+  const encodedOrigin = encodeURIComponent(originPlace);
+  
+  const url = `https://www.google.com/maps/dir/?api=1&origin=${encodedOrigin}&destination=${destination}`;
+  
+  // Log for debugging (can be removed in production)
+  console.log('Generated directions URL:', url);
+  
+  return url;
+};
+
+export const getUserLocation = (): Promise<{ lat: number; lng: number }> => {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error('Geolocation is not supported by this browser.'));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        });
+      },
+      (error) => {
+        reject(error);
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000, // 5 minutes
+      }
+    );
+  });
 };
 
 export function cn(...inputs: ClassValue[]) {

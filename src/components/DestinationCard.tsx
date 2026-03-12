@@ -19,6 +19,7 @@ interface DestinationCardProps {
   location?: LocationData;
   showDescription?: boolean;
   showMeta?: boolean;
+  showTitle?: boolean;
   imageClassName?: string;
   className?: string;
   enableModal?: boolean;
@@ -53,6 +54,7 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
   location,
   showDescription = false,
   showMeta = true,
+  showTitle = true,
   imageClassName,
   className,
   enableModal = false,
@@ -83,30 +85,32 @@ export const DestinationCard: React.FC<DestinationCardProps> = ({
     <div className="flex flex-col h-full text-black">
       <div className={cardImageClassName}>
         <img src={imageUrl} alt={title} className="h-full w-full object-cover" />
-        <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
-          <Star className="h-3.5 w-3.5 text-yellow-300" fill="currentColor" />
+        <div className="absolute top-3 left-3 flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-[10px] text-white">
+          <Star className="h-3 w-3 text-yellow-300" fill="currentColor" />
           <span>{formatRating(ratingAvg, ratingCount)}</span>
         </div>
-        <div className="absolute inset-x-0 bottom-0 p-4">
-          <div className="flex items-center gap-2">
-            <Avatar
-              name={postedBy ?? 'Traveler'}
-              imageUrl={postedByImageUrl}
-              sizeClassName="h-7 w-7"
-              className="bg-black/40"
-              asButton={false}
-              onClick={
-                postedById && onProfileClick
-                  ? (event) => {
-                      event.stopPropagation();
-                      onProfileClick(postedById);
-                    }
-                  : undefined
-              }
-            />
-            <p className="text-sm sm:text-base font-semibold text-white">{title}</p>
+        {showTitle && (
+          <div className="absolute inset-x-0 bottom-0 p-4">
+            <div className="flex items-center gap-2">
+              <Avatar
+                name={postedBy ?? 'Traveler'}
+                imageUrl={postedByImageUrl}
+                sizeClassName="h-7 w-7"
+                className="bg-black/40"
+                asButton={false}
+                onClick={
+                  postedById && onProfileClick
+                    ? (event) => {
+                        event.stopPropagation();
+                        onProfileClick(postedById);
+                      }
+                    : undefined
+                }
+              />
+              <p className="text-sm sm:text-base font-semibold text-white">{title}</p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
       {(shouldShowMeta || shouldShowDescription) && (
         <div className="px-4 pb-4 pt-3">

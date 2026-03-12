@@ -57,11 +57,15 @@ export const RouteMapView: React.FC<RouteMapViewProps> = ({
     ? { lat: destination.lat as number, lng: destination.lng as number }
     : DEFAULT_CENTER;
 
-  const googleMapsLink = !hasCoords
-    ? destination.municipality
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([destination.barangay, destination.municipality, 'Ilocos Sur'].filter(Boolean).join(', '))}`
-      : 'https://www.google.com/maps'
-    : `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}`;
+  const googleMapsLink = destinationName
+    ? hasCoords
+      ? `https://www.google.com/maps/search/${encodeURIComponent(destinationName)}/@${destination.lat},${destination.lng},15z`
+      : `https://www.google.com/maps/search/${encodeURIComponent(destinationName)}`
+    : !hasCoords
+      ? destination.municipality
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([destination.barangay, destination.municipality, 'Ilocos Sur'].filter(Boolean).join(', '))}`
+        : 'https://www.google.com/maps'
+      : `https://www.google.com/maps/dir/?api=1&destination=${destination.lat},${destination.lng}`;
 
   const displayName = destinationName || destination.barangay || 'Destination';
   const locationLabel = [destination.barangay, destination.municipality]

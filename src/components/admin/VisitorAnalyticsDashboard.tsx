@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -100,6 +100,7 @@ const DeviceLegend = (props: any) => {
 
 export const VisitorAnalyticsDashboard: React.FC = () => {
   const shouldReduceMotion = useReducedMotion();
+  const [visitorLogsPage, setVisitorLogsPage] = useState(1);
   
   // Fetch analytics events
   const { data: analyticsEvents = [], isLoading: isAnalyticsLoading } = useQuery({
@@ -516,6 +517,56 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
     staleTime: 60000,
   });
 
+  // Fetch recent visitor logs
+  const { data: visitorLogs = [] } = useQuery({
+    queryKey: ['recent-visitor-logs'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('page_views')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error) {
+          console.error('Failed to fetch visitor logs:', error);
+          return [];
+        }
+
+        return (data || []).map((log: any) => {
+          // Parse user agent to extract browser and OS
+          const ua = (log.user_agent_text || log.user_agent || '').toLowerCase();
+          
+          let browser = 'Unknown';
+          if (ua.includes('chrome') && !ua.includes('edge')) browser = 'Chrome';
+          else if (ua.includes('firefox')) browser = 'Firefox';
+          else if (ua.includes('safari') && !ua.includes('chrome')) browser = 'Safari';
+          else if (ua.includes('edge')) browser = 'Edge';
+
+          let os = 'Unknown';
+          if (ua.includes('windows')) os = 'Windows';
+          else if (ua.includes('mac')) os = 'macOS';
+          else if (ua.includes('linux')) os = 'Linux';
+          else if (ua.includes('android')) os = 'Android';
+          else if (ua.includes('iphone') || ua.includes('ipad')) os = 'iOS';
+
+          return {
+            timestamp: new Date(log.created_at).toLocaleString(),
+            page: log.page_path || log.page || '/',
+            browser,
+            os,
+            location: log.location || log.city || 'Unknown',
+          };
+        });
+      } catch (error) {
+        console.error('Error fetching visitor logs:', error);
+        return [];
+      }
+    },
+    staleTime: 30000,
+    refetchInterval: 30000,
+  });
+
   if (isAnalyticsLoading) {
     return <AnalyticsDashboardSkeleton />;
   }
@@ -773,6 +824,86 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
             )}
           </div>
         </div>
+      </motion.div>
+
+      {/* Recent Visitors Table */}
+      <motion.div
+        className="glass-secondary rounded-2xl p-6 border border-black/10"
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 20 }}
+        animate={shouldReduceMotion ? true : { opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.25 }}
+      >
+        <h2 className="text-lg font-bold text-black mb-4">Recent Visitors</h2>
+        <div className="border border-black/10 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm table-fixed">
+              <thead className="bg-black/5 border-b border-black/10" style={{ zIndex: 1000 }}>
+                <tr>
+                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Timestamp</th>
+                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Page</th>
+                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Browser</th>
+                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">OS</th>
+                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Location</th>
+                </tr>
+              </thead>
+              <tbody style={{ zIndex: 0 }}>
+                {visitorLogs.length > 0 ? (
+                  visitorLogs.slice((visitorLogsPage - 1) * 10, visitorLogsPage * 10).map((log: any, index: number) => (
+                    <tr key={index} className="border-b border-black/5 hover:bg-black/2 transition-colors" style={{ zIndex: 0 }}>
+                      <td className="p-4 text-black/70 w-1/5">{log.timestamp}</td>
+                      <td className="p-4 w-1/5">
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                          {log.page}
+                        </span>
+                      </td>
+                      <td className="p-4 text-black/70 w-1/5">{log.browser}</td>
+                      <td className="p-4 text-black/70 w-1/5">{log.os}</td>
+                      <td className="p-4 text-black/70 w-1/5">{log.location}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="p-4 text-center text-black/60">
+                      No visitor data available
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* Pagination Controls */}
+        {visitorLogs.length > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-4">
+            <button
+              onClick={() => setVisitorLogsPage(prev => Math.max(1, prev - 1))}
+              disabled={visitorLogsPage === 1}
+              className="px-3 py-1 text-sm font-medium text-black/70 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 rounded transition-colors"
+            >
+              Previous
+            </button>
+            {Array.from({ length: Math.ceil(visitorLogs.length / 10) }, (_, i) => i + 1).map(pageNum => (
+              <button
+                key={pageNum}
+                onClick={() => setVisitorLogsPage(pageNum)}
+                className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
+                  visitorLogsPage === pageNum
+                    ? 'bg-blue-500 text-white'
+                    : 'text-black/70 hover:bg-black/5'
+                }`}
+              >
+                {pageNum}
+              </button>
+            ))}
+            <button
+              onClick={() => setVisitorLogsPage(prev => Math.min(Math.ceil(visitorLogs.length / 10), prev + 1))}
+              disabled={visitorLogsPage === Math.ceil(visitorLogs.length / 10)}
+              className="px-3 py-1 text-sm font-medium text-black/70 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-black/5 rounded transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </motion.div>
     </div>
   );

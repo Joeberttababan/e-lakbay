@@ -147,7 +147,7 @@ export const NavBar: React.FC<NavBarProps> = ({
           className={cn(`cursor-pointer transition-colors ${navTextClass}`, isHome ? 'hover:text-white/70' : 'hover:text-black/70')}
           aria-label="View analytics"
         >
-          Analytics
+          Visitor logs
         </button>
         {!isAuthenticated ? (
           <>
