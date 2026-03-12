@@ -162,7 +162,7 @@ const Carousel: React.FC<CarouselProps> = ({
           {loopItems.map((item, index) => (
             <div
               key={`${item.data.id}-${index}`}
-              className="carousel-item flex-shrink-0 w-32 sm:w-40 md:w-48 lg:w-56 h-20 sm:h-24 md:h-32 lg:h-40 cursor-pointer hover:opacity-90 transition-opacity"
+              className="carousel-item flex-shrink-0 w-36 sm:w-44 md:w-56 lg:w-64 h-24 sm:h- md:h-36 lg:h-48 cursor-pointer hover:opacity-90 transition-opacity"
               onClick={() => onItemClick?.(item.data, item.type)}
             >
               <div className="w-full h-full rounded-lg overflow-hidden shadow-lg">
