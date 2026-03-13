@@ -158,11 +158,11 @@ const Carousel: React.FC<CarouselProps> = ({
         onTouchEnd={() => setIsPaused(false)}
         onTouchCancel={() => setIsPaused(false)}
       >
-        <div className="flex w-max gap-4">
+        <div className="flex w-max gap-1 sm:gap-2 md:gap-3">
           {loopItems.map((item, index) => (
             <div
               key={`${item.data.id}-${index}`}
-              className="carousel-item flex-shrink-0 w-36 sm:w-44 md:w-56 lg:w-64 h-24 sm:h- md:h-36 lg:h-48 cursor-pointer hover:opacity-90 transition-opacity"
+              className="carousel-item flex-shrink-0 w-32 sm:w-32 md:w-40 lg:w-48 h-20 sm:h-20 md:h-24 lg:h-32 cursor-pointer hover:opacity-90 transition-opacity"
               onClick={() => onItemClick?.(item.data, item.type)}
             >
               <div className="w-full h-full rounded-lg overflow-hidden shadow-lg">
@@ -451,14 +451,14 @@ export const HomepageHeroSection: React.FC<HomepageHeroSectionProps> = ({
       <div className="absolute inset-0 bg-linear-to-b from-black/70 via-black/40 to-transparent" />
 
       <div className="relative z-10 w-full max-w-5xl px-4 sm:px-6 flex flex-col items-center flex-grow">
-        <div className="text-center md:text-left w-full mb-12">
+        <div className="text-center md:text-left w-full mb-6 sm:mb-8 md:mb-12">
 
           {/* "Explore" — animated letter by letter via GradualSpacing */}
           <GradualSpacing
             text="Explore"
             duration={0.6}
             delayMultiple={0.06}
-            className="text-white text-6xl sm:text-7xl md:text-8xl font-semibold leading-tight"
+            className="text-white text-4xl sm:text-6xl md:text-8xl font-semibold leading-tight"
           />
 
           {/* Subtitle — fades in after "Explore" finishes (~7 letters × 0.06 + 0.6 ≈ 1.02s) */}
@@ -466,7 +466,7 @@ export const HomepageHeroSection: React.FC<HomepageHeroSectionProps> = ({
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 1.1 }}
-            className="text-hero-gradient text-transparent text-3xl sm:text-6xl md:text-7xl font-semibold mt-3 md:mt-2 drop-shadow-black drop-shadow-xl leading-tight"
+            className="text-hero-gradient text-transparent text-2xl sm:text-4xl md:text-6xl lg:text-7xl font-semibold mt-2 md:mt-2 drop-shadow-black drop-shadow-xl leading-tight"
           >
             2nd District of Ilocos Sur
           </motion.h1>
@@ -476,7 +476,7 @@ export const HomepageHeroSection: React.FC<HomepageHeroSectionProps> = ({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.5 }}
-            className="text-white text-base sm:text-lg md:text-xl mt-4"
+            className="text-white text-xs sm:text-base md:text-lg lg:text-xl mt-2 sm:mt-3 md:mt-4"
           >
             "Explore, Taste, and Enjoy the culture of every town."
           </motion.p>
@@ -487,52 +487,37 @@ export const HomepageHeroSection: React.FC<HomepageHeroSectionProps> = ({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 1.8 }}
-          className="w-full flex justify-center relative z-[100] mb-8"
+          className="w-full flex justify-center relative z-[100] mb-4 sm:mb-6 md:mb-8"
         >
           <HomepageSearchWithSuggestions />
         </motion.div>
-      </div>
 
-      {/* Combined Carousel */}
-      {(topDestinations.length > 0 || topProducts.length > 0) && (
+        {/* Three Feature Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 2.0 }}
-          className="relative z-10 w-full px-4 sm:px-6 flex flex-col items-center justify-center"
+          transition={{ duration: 0.7, delay: 2.1 }}
+          className="w-screen -mx-4 sm:-mx-6 px-2 sm:px-3 grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4 md:gap-6 mt-4 sm:mt-6 md:mt-8 mb-2 sm:mb-4 md:mb-8"
         >
-          {(() => {
-            // Combine and shuffle destinations and products into a single array
-            const combinedItems: CombinedItem[] = [];
-            topDestinations.forEach((dest) => {
-              combinedItems.push({ type: 'destination', data: dest });
-            });
-            topProducts.forEach((prod) => {
-              combinedItems.push({ type: 'product', data: prod });
-            });
+          {/* Discover Local Products */}
+          <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 hover:bg-white/15 transition-all duration-300">
+            <h3 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-1 sm:mb-2">Discover Local Products</h3>
+            <p className="text-xs sm:text-xs md:text-sm lg:text-base text-white/80 line-clamp-3 sm:line-clamp-none">Experience the rich culture of Ilocos Sur through our unique local products. These traditional delicacies and handcrafted goods showcase the best of our region.</p>
+          </div>
 
-            // Shuffle the array using Fisher-Yates algorithm
-            for (let i = combinedItems.length - 1; i > 0; i--) {
-              const j = Math.floor(Math.random() * (i + 1));
-              [combinedItems[i], combinedItems[j]] = [combinedItems[j], combinedItems[i]];
-            }
+          {/* Explore Destinations */}
+          <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 hover:bg-white/15 transition-all duration-300">
+            <h3 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-1 sm:mb-2">Explore Destinations</h3>
+            <p className="text-xs sm:text-xs md:text-sm lg:text-base text-white/80 line-clamp-3 sm:line-clamp-none">Uncover hidden gems and breathtaking natural wonders across Ilocos Sur. Each destination highlights the province's rich culture, history, and scenic beauty.</p>
+          </div>
 
-            return (
-              <Carousel
-                items={combinedItems}
-                onViewProfile={onViewProfile}
-                onItemClick={(item, type) => {
-                  if (type === 'destination') {
-                    setActiveDestination(item as DestinationItem);
-                  } else {
-                    setActiveProduct(item as ProductItem);
-                  }
-                }}
-              />
-            );
-          })()}
+          {/* Celebrate Festivals */}
+          <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-lg sm:rounded-xl md:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 hover:bg-white/15 transition-all duration-300">
+            <h3 className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold text-white mb-1 sm:mb-2">Celebrate Festivals</h3>
+            <p className="text-xs sm:text-xs md:text-sm lg:text-base text-white/80 line-clamp-3 sm:line-clamp-none">Witness the vibrant traditions and colorful events celebrated throughout our towns. Join in the festivities and experience the warmth and hospitality of Ilocos Sur.</p>
+          </div>
         </motion.div>
-      )}
+      </div>
 
       {/* Destination Modal */}
       {activeDestination && (

@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DestinationCard } from '../components/DestinationCard';
 import { ProductCard } from '../components/ProductCard';
 import { WildlifeCard } from '../components/WildlifeCard';
+import { EventModal } from '../components/EventModal';
 import { ProductModal } from '../components/ProductModal';
 import { RatingModal } from '../components/RatingModal';
 import { GroupedSearchSuggest, GroupedSearchItem } from '../components/SearchSuggest';
@@ -27,7 +28,7 @@ interface SearchResultsPageProps {
   onViewProfile?: (profileId: string) => void;
 }
 
-type FilterType = 'all' | 'destination' | 'product' | 'wildlife';
+type FilterType = 'all' | 'destination' | 'product' | 'wildlife' | 'event';
 type SortOption = 'relevant' | 'rating-high' | 'rating-low' | 'newest';
 
 interface DestinationResult {
@@ -92,6 +93,20 @@ interface WildlifeResult {
   createdAt?: string | null;
 }
 
+interface EventResult {
+  id: string;
+  name: string;
+  description: string | null;
+  imageUrl: string | null;
+  eventDate: string | null;
+  eventTime: string | null;
+  municipality: string | null;
+  barangay: string | null;
+  createdAt?: string | null;
+  createdBy?: string | null;
+  createdByImageUrl?: string | null;
+}
+
 type ActiveProduct = {
   id: string;
   name: string;
@@ -133,7 +148,8 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
   const [filterType, setFilterType] = useState<FilterType>(typeParam);
   const [sortOption, setSortOption] = useState<SortOption>('relevant');
   const [minRating, setMinRating] = useState<number>(0);
-  const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string; type: 'destination' | 'product' } | null>(null);
+  const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string; type: 'destination' | 'product' | 'event' } | null>(null);
+  const [activeEvent, setActiveEvent] = useState<EventResult | null>(null);
   const [activeProduct, setActiveProduct] = useState<ActiveProduct | null>(null);
 
   // Fetch all destinations
@@ -342,6 +358,41 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
     },
   });
 
+  // Fetch all events
+  const { data: events = [], isPending: isEventsPending } = useQuery({
+    queryKey: ['search-events'],
+    queryFn: async () => {
+      try {
+        const { data: eventRows, error: eventError } = await supabase
+          .from('events')
+          .select('id, title, description, start_date, end_date, location, category, created_at, created_by, profiles:created_by(full_name, img_url)')
+          .order('created_at', { ascending: false });
+
+        if (eventError) throw eventError;
+
+        return (eventRows ?? []).map((row: any) => {
+          const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+          return {
+            id: row.id,
+            name: row.title,
+            description: row.description,
+            imageUrl: null,
+            eventDate: row.start_date ? new Date(row.start_date).toLocaleDateString() : null,
+            eventTime: row.start_date ? new Date(row.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null,
+            municipality: row.location,
+            barangay: null,
+            createdAt: row.created_at,
+            createdBy: profile?.full_name || 'Municipality',
+            createdByImageUrl: profile?.img_url || null,
+          } as EventResult;
+        });
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        return [];
+      }
+    },
+  });
+
   // Convert to GroupedSearchItem format for search suggestions
   const destinationSuggestions: GroupedSearchItem[] = useMemo(() =>
     destinations.map((d) => ({
@@ -376,6 +427,17 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
       meta: w.conservationStatus ?? undefined,
     })),
     [wildlife]
+  );
+
+  const eventSuggestions: GroupedSearchItem[] = useMemo(() =>
+    events.map((e) => ({
+      id: e.id,
+      name: e.name,
+      imageUrl: e.imageUrl,
+      type: 'event' as const,
+      meta: e.municipality ?? undefined,
+    })),
+    [events]
   );
 
   // Filter results based on search query
@@ -413,6 +475,17 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
     });
   }, [wildlife, queryParam]);
 
+  const filteredEvents = useMemo(() => {
+    const query = queryParam.toLowerCase();
+    if (!query) return events;
+    return events.filter((e) => {
+      const name = e.name.toLowerCase();
+      const description = e.description?.toLowerCase() ?? '';
+      const municipality = e.municipality?.toLowerCase() ?? '';
+      return name.includes(query) || description.includes(query) || municipality.includes(query);
+    });
+  }, [events, queryParam]);
+
   // Apply filters (type and rating)
   const displayDestinations = useMemo(() => {
     if (filterType === 'product' || filterType === 'wildlife') return [];
@@ -420,14 +493,19 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
   }, [filteredDestinations, filterType, minRating]);
 
   const displayProducts = useMemo(() => {
-    if (filterType === 'destination' || filterType === 'wildlife') return [];
+    if (filterType === 'destination' || filterType === 'wildlife' || filterType === 'event') return [];
     return filteredProducts.filter((p) => (p.ratingAvg ?? 0) >= minRating);
   }, [filteredProducts, filterType, minRating]);
 
   const displayWildlife = useMemo(() => {
-    if (filterType === 'destination' || filterType === 'product') return [];
+    if (filterType === 'destination' || filterType === 'product' || filterType === 'event') return [];
     return filteredWildlife;
   }, [filteredWildlife, filterType]);
+
+  const displayEvents = useMemo(() => {
+    if (filterType === 'destination' || filterType === 'product' || filterType === 'wildlife') return [];
+    return filteredEvents;
+  }, [filteredEvents, filterType]);
 
   // Sort results
   const sortedDestinations = useMemo(() => {
@@ -466,8 +544,16 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
     return sorted;
   }, [displayWildlife, sortOption]);
 
-  const totalResults = sortedDestinations.length + sortedProducts.length + sortedWildlife.length;
-  const isLoading = isDestinationsPending || isProductsPending || isWildlifePending;
+  const sortedEvents = useMemo(() => {
+    const sorted = [...displayEvents];
+    if (sortOption === 'newest') {
+      return sorted.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+    }
+    return sorted;
+  }, [displayEvents, sortOption]);
+
+  const totalResults = sortedDestinations.length + sortedProducts.length + sortedWildlife.length + sortedEvents.length;
+  const isLoading = isDestinationsPending || isProductsPending || isWildlifePending || isEventsPending;
 
   // Track page view
   useEffect(() => {
@@ -493,6 +579,8 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
       navigate(`/products?id=${item.id}`);
     } else if (item.type === 'wildlife') {
       navigate(`/wildlife?id=${item.id}`);
+    } else if (item.type === 'event') {
+      navigate(`/events?id=${item.id}`);
     }
   };
 
@@ -556,7 +644,8 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
             destinations={destinationSuggestions}
             products={productSuggestions}
             wildlife={wildlifeSuggestions}
-            placeholder="Search destinations, products, wildlife..."
+            events={eventSuggestions}
+            placeholder="Search destinations, products, wildlife, events..."
             onSelectItem={handleSelectItem}
             onSearch={handleSearch}
             className="w-full max-w-2xl"
@@ -574,7 +663,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
           <div className="flex items-center gap-2">
             <span className="text-sm text-black/70">Type:</span>
             <div className="flex gap-1">
-              {(['all', 'destination', 'product', 'wildlife'] as FilterType[]).map((type) => (
+              {(['all', 'destination', 'product', 'wildlife', 'event'] as FilterType[]).map((type) => (
                 <button
                   key={type}
                   onClick={() => handleFilterChange(type)}
@@ -584,7 +673,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
                       : 'bg-[#E8E8E8] text-black hover:bg-[#E8E8E8]/80'
                   }`}
                 >
-                  {type === 'all' ? 'All' : type === 'destination' ? 'Destinations' : type === 'product' ? 'Products' : 'Wildlife'}
+                  {type === 'all' ? 'All' : type === 'destination' ? 'Destinations' : type === 'product' ? 'Products' : type === 'wildlife' ? 'Wildlife' : 'Events'}
                 </button>
               ))}
             </div>
@@ -818,6 +907,53 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
                 </div>
               </section>
             )}
+
+            {/* Events Section */}
+            {sortedEvents.length > 0 && (
+              <section>
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3 mb-6"
+                >
+                  <div className="h-8 w-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                    <svg className="h-5 w-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold">
+                    Events ({sortedEvents.length})
+                  </h2>
+                </motion.div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {sortedEvents.map((event, index) => (
+                    <motion.div key={event.id} {...getItemMotion(index)}>
+                      <button
+                        onClick={() => setActiveEvent(event)}
+                        className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-all w-full text-left group"
+                      >
+                        <div className="bg-gradient-to-br from-blue-500 to-orange-500 h-40 flex items-center justify-center group-hover:from-blue-600 group-hover:to-orange-600 transition-all">
+                          <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-semibold text-black mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">{event.name}</h3>
+                          {event.description && (
+                            <p className="text-sm text-black/70 line-clamp-2 mb-3">{event.description}</p>
+                          )}
+                          <div className="space-y-1 text-xs text-black/60">
+                            {event.eventDate && (<p>📅 {event.eventDate}</p>)}
+                            {event.municipality && (<p>📍 {event.municipality}</p>)}
+                          </div>
+                        </div>
+                      </button>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
       </div>
@@ -846,6 +982,15 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
             }
           }}
           onProfileClick={onViewProfile}
+        />
+      )}
+
+      {/* Event Modal */}
+      {activeEvent && (
+        <EventModal
+          open={Boolean(activeEvent)}
+          onClose={() => setActiveEvent(null)}
+          event={activeEvent}
         />
       )}
 

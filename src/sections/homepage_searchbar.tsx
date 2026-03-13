@@ -68,6 +68,7 @@ interface HomepageSearchWithSuggestionsProps {
   onSelectDestination?: (id: string) => void;
   onSelectProduct?: (id: string) => void;
   onSelectWildlife?: (id: string) => void;
+  onSelectEvent?: (id: string) => void;
 }
 
 export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestionsProps> = ({
@@ -75,6 +76,7 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
   onSelectDestination,
   onSelectProduct,
   onSelectWildlife,
+  onSelectEvent,
 }) => {
   const navigate = useNavigate();
   const [searchValue, setSearchValue] = React.useState('');
@@ -122,6 +124,20 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  // Fetch events for suggestions
+  const { data: events = [] } = useQuery({
+    queryKey: ['homepage-search-events'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('events')
+        .select('id, title, description, start_date, end_date, location, created_at, created_by, profiles:created_by(full_name, img_url)')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      return data ?? [];
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // Convert to GroupedSearchItem format
   const destinationSuggestions: GroupedSearchItem[] = useMemo(() =>
     destinations.map((d) => ({
@@ -158,6 +174,17 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
     [wildlife]
   );
 
+  const eventSuggestions: GroupedSearchItem[] = useMemo(() =>
+    events.map((e) => ({
+      id: e.id,
+      name: e.title,
+      imageUrl: null,
+      type: 'event' as const,
+      meta: e.location ?? undefined,
+    })),
+    [events]
+  );
+
   const handleSelectItem = (item: GroupedSearchItem) => {
     if (item.type === 'destination') {
       onSelectDestination?.(item.id);
@@ -168,6 +195,9 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
     } else if (item.type === 'wildlife') {
       onSelectWildlife?.(item.id);
       navigate(`/wildlife?id=${item.id}`);
+    } else if (item.type === 'event') {
+      onSelectEvent?.(item.id);
+      navigate(`/events?id=${item.id}`);
     }
   };
 
@@ -182,7 +212,8 @@ export const HomepageSearchWithSuggestions: React.FC<HomepageSearchWithSuggestio
       destinations={destinationSuggestions}
       products={productSuggestions}
       wildlife={wildlifeSuggestions}
-      placeholder="Search destinations, products, wildlife..."
+      events={eventSuggestions}
+      placeholder="Search destinations, products, wildlife, events..."
       onSelectItem={handleSelectItem}
       onSearch={handleSearch}
       className={className}

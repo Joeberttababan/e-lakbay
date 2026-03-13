@@ -28,12 +28,16 @@ const ProfilesTab: React.FC = () => {
     role: '',
     battle: '',
   });
+  const [selectedProfileType, setSelectedProfileType] = useState<'all' | 'developer' | 'tourist' | 'municipality'>('all');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<{
     full_name: string;
     role: RoleOption;
     battle_cry: string;
     municipality_name: string;
+    nationality?: string;
+    contact_number?: string;
+    gender?: string;
   } | null>(null);
 
   // Load profiles
@@ -44,7 +48,7 @@ const ProfilesTab: React.FC = () => {
       setError(null);
       const { data, error: fetchError } = await supabase
         .from('profiles')
-        .select('id, full_name, email, role, battle_cry, municipality_name, created_at')
+        .select('id, full_name, email, role, battle_cry, municipality_name, created_at, nationality, contact_number, gender')
         .order('created_at', { ascending: false });
 
       if (!isMounted) return;
@@ -79,9 +83,10 @@ const ProfilesTab: React.FC = () => {
       const matchesBattle =
         !battleFilter ||
         (battleFilter === 'has' ? Boolean(cry) : battleFilter === 'empty' ? !cry : true);
-      return matchesQuery && matchesRole && matchesBattle;
+      const matchesProfileType = selectedProfileType === 'all' || role === selectedProfileType;
+      return matchesQuery && matchesRole && matchesBattle && matchesProfileType;
     });
-  }, [profiles, searchQuery, columnFilters]);
+  }, [profiles, searchQuery, columnFilters, selectedProfileType]);
 
   const filterOptions = useMemo(() => {
     const roles = Array.from(new Set(profiles.map((profile) => profile.role || '').filter(Boolean)));
@@ -136,6 +141,9 @@ const ProfilesTab: React.FC = () => {
         : 'tourist') as RoleOption,
       battle_cry: profile.battle_cry ?? '',
       municipality_name: profile.municipality_name ?? '',
+      nationality: profile.nationality ?? '',
+      contact_number: profile.contact_number ?? '',
+      gender: profile.gender ?? '',
     });
   };
 
@@ -151,6 +159,9 @@ const ProfilesTab: React.FC = () => {
       role: editValues.role,
       battle_cry: editValues.battle_cry.trim() || null,
       municipality_name: editValues.municipality_name.trim() || null,
+      nationality: editValues.nationality?.trim() || null,
+      contact_number: editValues.contact_number?.trim() || null,
+      gender: editValues.gender?.trim() || null,
     };
 
     const { error: updateError } = await supabase
@@ -185,6 +196,11 @@ const ProfilesTab: React.FC = () => {
     setProfiles((prev) => prev.filter((profile) => profile.id !== profileId));
     toast.success('Profile deleted.');
   };
+
+  // Determine which columns to show based on profile type
+  const isTouristView = selectedProfileType === 'tourist';
+  const isMunicipalityView = selectedProfileType === 'municipality';
+  const isDeveloperView = selectedProfileType === 'developer';
 
   return (
     <motion.section
@@ -234,54 +250,108 @@ const ProfilesTab: React.FC = () => {
         </div>
       )}
 
+      {/* Profile Type Filter Tabs */}
+      <div className="mt-6 flex gap-2 border-b border-[#1A1A1A]/10">
+        {(['all', 'developer', 'tourist', 'municipality'] as const).map((type) => {
+          const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+          const count = type === 'all' ? profiles.length : profiles.filter((p) => p.role === type).length;
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setSelectedProfileType(type)}
+              className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+                selectedProfileType === type
+                  ? 'text-[#1A1A1A] border-b-2 border-[#1A1A1A]'
+                  : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]'
+              }`}
+            >
+              {typeLabel} ({count})
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mt-6">
         <Table className="text-black">
           <TableHeader>
             <TableRow className="border-black/10 text-black/50">
               <TableHead className="text-black/50">Name</TableHead>
               <TableHead className="text-black/50">Email</TableHead>
-              <TableHead className="text-[#1A1A1A]/50">Role</TableHead>
-              <TableHead className="text-[#1A1A1A]/50">Battle Cry</TableHead>
+              {isTouristView && <TableHead className="text-[#1A1A1A]/50">Role</TableHead>}
+              {isTouristView && <TableHead className="text-black/50">Nationality</TableHead>}
+              {isTouristView && <TableHead className="text-black/50">Contact Number</TableHead>}
+              {isTouristView && <TableHead className="text-black/50">Gender</TableHead>}
+              {!isTouristView && <TableHead className="text-[#1A1A1A]/50">Role</TableHead>}
+              {!isTouristView && <TableHead className="text-[#1A1A1A]/50">Battle Cry</TableHead>}
+              {isMunicipalityView && <TableHead className="text-black/50">Contact Number</TableHead>}
               <TableHead className="text-right text-[#1A1A1A]/50">Actions</TableHead>
             </TableRow>
             <TableRow className="border-[#1A1A1A]/10">
               <TableHead />
               <TableHead />
-              <TableHead>
-                <select
-                  aria-label="Filter by role"
-                  value={columnFilters.role}
-                  onChange={(event) =>
-                    setColumnFilters((prev) => ({ ...prev, role: event.target.value }))
-                  }
-                  className="w-full rounded-full border border-white/20 bg-slate-950 px-3 py-1.5 pr-8 text-xs text-white"
-                >
-                  <option value="">All</option>
-                  {filterOptions.roles.map((role) => (
-                    <option key={role} value={role}>
-                      {role}
-                    </option>
-                  ))}
-                </select>
-              </TableHead>
-              <TableHead>
-                <select
-                  aria-label="Filter by battle cry"
-                  value={columnFilters.battle}
-                  onChange={(event) =>
-                    setColumnFilters((prev) => ({ ...prev, battle: event.target.value }))
-                  }
-                  className="w-full rounded-full border border-white/20 bg-slate-950 px-3 py-1.5 pr-8 text-xs text-white"
-                >
-                  <option value="">All</option>
-                  {filterOptions.battleOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </TableHead>
-              <TableHead>Municipality</TableHead>
+              {isTouristView && (
+                <TableHead>
+                  <select
+                    aria-label="Filter by role"
+                    value={columnFilters.role}
+                    onChange={(event) =>
+                      setColumnFilters((prev) => ({ ...prev, role: event.target.value }))
+                    }
+                    className="w-full rounded-full border border-white/20 bg-slate-950 px-3 py-1.5 pr-8 text-xs text-white"
+                  >
+                    <option value="">All</option>
+                    {filterOptions.roles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                </TableHead>
+              )}
+              {isTouristView && <TableHead />}
+              {isTouristView && <TableHead />}
+              {isTouristView && <TableHead />}
+              {!isTouristView && (
+                <TableHead>
+                  <select
+                    aria-label="Filter by role"
+                    value={columnFilters.role}
+                    onChange={(event) =>
+                      setColumnFilters((prev) => ({ ...prev, role: event.target.value }))
+                    }
+                    className="w-full rounded-full border border-white/20 bg-slate-950 px-3 py-1.5 pr-8 text-xs text-white"
+                  >
+                    <option value="">All</option>
+                    {filterOptions.roles.map((role) => (
+                      <option key={role} value={role}>
+                        {role}
+                      </option>
+                    ))}
+                  </select>
+                </TableHead>
+              )}
+              {!isTouristView && (
+                <TableHead>
+                  <select
+                    aria-label="Filter by battle cry"
+                    value={columnFilters.battle}
+                    onChange={(event) =>
+                      setColumnFilters((prev) => ({ ...prev, battle: event.target.value }))
+                    }
+                    className="w-full rounded-full border border-white/20 bg-slate-950 px-3 py-1.5 pr-8 text-xs text-white"
+                  >
+                    <option value="">All</option>
+                    {filterOptions.battleOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </TableHead>
+              )}
+              {!isTouristView && <TableHead>Municipality</TableHead>}
+              {isMunicipalityView && <TableHead />}
               <TableHead />
             </TableRow>
           </TableHeader>
@@ -295,12 +365,40 @@ const ProfilesTab: React.FC = () => {
                   <TableCell className="py-3">
                     <Skeleton className="h-4 w-40" />
                   </TableCell>
-                  <TableCell className="py-3">
-                    <Skeleton className="h-9 w-28 rounded-lg" />
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <Skeleton className="h-9 w-56 rounded-lg" />
-                  </TableCell>
+                  {isTouristView && (
+                    <>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-9 w-28 rounded-lg" />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-4 w-32" />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                    </>
+                  )}
+                  {!isTouristView && (
+                    <>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-9 w-28 rounded-lg" />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-9 w-56 rounded-lg" />
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Skeleton className="h-4 w-40" />
+                      </TableCell>
+                    </>
+                  )}
+                  {isMunicipalityView && (
+                    <TableCell className="py-3">
+                      <Skeleton className="h-4 w-32" />
+                    </TableCell>
+                  )}
                   <TableCell className="py-3 text-right">
                     <div className="flex justify-end gap-2">
                       <Skeleton className="h-8 w-20 rounded-full" />
@@ -311,7 +409,7 @@ const ProfilesTab: React.FC = () => {
               ))
             ) : filteredProfiles.length === 0 ? (
               <TableRow className="border-[#1A1A1A]/10">
-                <TableCell className="py-6 text-[#1A1A1A]/60" colSpan={5}>
+                <TableCell className="py-6 text-[#1A1A1A]/60" colSpan={isTouristView ? 6 : isMunicipalityView ? 7 : 6}>
                   No profiles match your search.
                 </TableCell>
               </TableRow>
@@ -323,7 +421,7 @@ const ProfilesTab: React.FC = () => {
                 return (
                   <TableRow key={profile.id} className="border-[#1A1A1A]/10 align-top">
                     <TableCell>
-                      {isEditing ? (
+                      {isEditing && !isTouristView ? (
                         <input
                           value={editValues?.full_name ?? ''}
                           onChange={(event) =>
@@ -339,89 +437,142 @@ const ProfilesTab: React.FC = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-[#1A1A1A]/70">{profile.email || '—'}</TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <select
-                          value={editValues?.role ?? 'tourist'}
-                          onChange={(event) =>
-                            setEditValues((prev) =>
-                              prev
-                                ? { ...prev, role: event.target.value as RoleOption }
-                                : prev
-                            )
-                          }
-                          className="rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
-                          aria-label="User role"
-                        >
-                          {ROLE_OPTIONS.map((role) => (
-                            <option key={role} value={role}>
-                              {role}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="capitalize">{profile.role || 'tourist'}</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <input
-                          value={editValues?.battle_cry ?? ''}
-                          onChange={(event) =>
-                            setEditValues((prev) =>
-                              prev ? { ...prev, battle_cry: event.target.value } : prev
-                            )
-                          }
-                          className="w-56 rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
-                          aria-label="Battle cry"
-                        />
-                      ) : (
-                        <div className="max-w-55">
-                          {battleCry ? (
-                            shouldCollapseBattleCry ? (
-                              <Accordion type="single" collapsible>
-                                <AccordionItem value={`battle-${profile.id}`} className="border-none">
-                                  <AccordionTrigger className="group py-0 text-xs text-[#1A1A1A]/70 hover:no-underline [&>svg]:hidden">
-                                    <span className="line-clamp-1 text-left group-data-[state=open]:hidden">
-                                      {battleCry}
-                                    </span>
-                                    <span className="text-[10px] uppercase tracking-wide text-[#1A1A1A]/40 group-data-[state=open]:hidden">
-                                      Expand
-                                    </span>
-                                    <span className="text-[10px] uppercase tracking-wide text-[#1A1A1A]/40 group-data-[state=closed]:hidden">
-                                      Collapse
-                                    </span>
-                                  </AccordionTrigger>
-                                  <AccordionContent className="pt-2 text-xs text-[#1A1A1A]/70">
-                                    {battleCry}
-                                  </AccordionContent>
-                                </AccordionItem>
-                              </Accordion>
-                            ) : (
-                              <span className="text-[#1A1A1A]/70">{battleCry}</span>
-                            )
+
+                    {/* Tourist View Columns */}
+                    {isTouristView && (
+                      <>
+                        <TableCell>
+                          {isEditing ? (
+                            <select
+                              value={editValues?.role ?? 'tourist'}
+                              onChange={(event) =>
+                                setEditValues((prev) =>
+                                  prev
+                                    ? { ...prev, role: event.target.value as RoleOption }
+                                    : prev
+                                )
+                              }
+                              className="rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
+                              aria-label="User role"
+                            >
+                              {ROLE_OPTIONS.map((role) => (
+                                <option key={role} value={role}>
+                                  {role}
+                                </option>
+                              ))}
+                            </select>
                           ) : (
-                            <span className="text-[#1A1A1A]/60">—</span>
+                            <span className="capitalize">{profile.role || 'tourist'}</span>
                           )}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isEditing ? (
-                        <input
-                          value={editValues?.municipality_name ?? ''}
-                          onChange={(event) =>
-                            setEditValues((prev) =>
-                              prev ? { ...prev, municipality_name: event.target.value } : prev
-                            )
-                          }
-                          className="w-40 rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
-                          aria-label="Municipality name"
-                        />
-                      ) : (
-                        <span className="text-[#1A1A1A]/70">{profile.municipality_name || '—'}</span>
-                      )}
-                    </TableCell>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-[#1A1A1A]/70">{profile.nationality || '—'}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-[#1A1A1A]/70">{profile.contact_number || '—'}</span>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-[#1A1A1A]/70">{profile.gender || '—'}</span>
+                        </TableCell>
+                      </>
+                    )}
+
+                    {/* Non-Tourist View Columns */}
+                    {!isTouristView && (
+                      <>
+                        <TableCell>
+                          {isEditing ? (
+                            <select
+                              value={editValues?.role ?? 'tourist'}
+                              onChange={(event) =>
+                                setEditValues((prev) =>
+                                  prev
+                                    ? { ...prev, role: event.target.value as RoleOption }
+                                    : prev
+                                )
+                              }
+                              className="rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
+                              aria-label="User role"
+                            >
+                              {ROLE_OPTIONS.map((role) => (
+                                <option key={role} value={role}>
+                                  {role}
+                                </option>
+                              ))}
+                            </select>
+                          ) : (
+                            <span className="capitalize">{profile.role || 'tourist'}</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="max-w-55">
+                            {battleCry ? (
+                              shouldCollapseBattleCry ? (
+                                <Accordion type="single" collapsible>
+                                  <AccordionItem value={`battle-${profile.id}`} className="border-none">
+                                    <AccordionTrigger className="group py-0 text-xs text-[#1A1A1A]/70 hover:no-underline [&>svg]:hidden">
+                                      <span className="line-clamp-1 text-left group-data-[state=open]:hidden">
+                                        {battleCry}
+                                      </span>
+                                      <span className="text-[10px] uppercase tracking-wide text-[#1A1A1A]/40 group-data-[state=open]:hidden">
+                                        Expand
+                                      </span>
+                                      <span className="text-[10px] uppercase tracking-wide text-[#1A1A1A]/40 group-data-[state=closed]:hidden">
+                                        Collapse
+                                      </span>
+                                    </AccordionTrigger>
+                                    <AccordionContent className="pt-2 text-xs text-[#1A1A1A]/70">
+                                      {battleCry}
+                                    </AccordionContent>
+                                  </AccordionItem>
+                                </Accordion>
+                              ) : (
+                                <span className="text-[#1A1A1A]/70">{battleCry}</span>
+                              )
+                            ) : (
+                              <span className="text-[#1A1A1A]/60">—</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {isEditing ? (
+                            <input
+                              value={editValues?.municipality_name ?? ''}
+                              onChange={(event) =>
+                                setEditValues((prev) =>
+                                  prev ? { ...prev, municipality_name: event.target.value } : prev
+                                )
+                              }
+                              className="w-40 rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
+                              aria-label="Municipality name"
+                            />
+                          ) : (
+                            <span className="text-[#1A1A1A]/70">{profile.municipality_name || '—'}</span>
+                          )}
+                        </TableCell>
+                      </>
+                    )}
+
+                    {/* Municipality Contact Number Column */}
+                    {isMunicipalityView && (
+                      <TableCell>
+                        {isEditing ? (
+                          <input
+                            value={editValues?.contact_number ?? ''}
+                            onChange={(event) =>
+                              setEditValues((prev) =>
+                                prev ? { ...prev, contact_number: event.target.value } : prev
+                              )
+                            }
+                            className="w-40 rounded-lg border border-[#1A1A1A]/20 bg-[#EEEEEE] px-3 py-2 text-sm text-[#1A1A1A]"
+                            aria-label="Contact Number"
+                          />
+                        ) : (
+                          <span className="text-[#1A1A1A]/70">{profile.contact_number || '—'}</span>
+                        )}
+                      </TableCell>
+                    )}
+
                     <TableCell>
                       <div className="flex justify-end gap-2">
                         {isEditing ? (

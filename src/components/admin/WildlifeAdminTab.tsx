@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Skeleton } from '../ui/skeleton';
 import { toast } from 'sonner';
-import { AlertCircle, Check, X, Eye } from 'lucide-react';
+import { AlertCircle, Check, X, Eye, Trash2 } from 'lucide-react';
 
 interface WildlifeApproval {
   id: string;
@@ -208,6 +208,37 @@ export const WildlifeAdminTab: React.FC<TabProps> = () => {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    const confirmed = window.confirm('Are you sure you want to delete this wildlife entry? This action cannot be undone.');
+    if (!confirmed) return;
+
+    setProcessingId(id);
+    try {
+      // Delete the wildlife record
+      const { error: deleteError } = await supabase
+        .from('endangered_wildlife')
+        .delete()
+        .eq('id', id);
+
+      if (deleteError) throw deleteError;
+
+      // Update local state to remove the deleted wildlife
+      setWildlife(wildlife.filter((w) => w.id !== id));
+
+      // Close modal if the deleted item was selected
+      if (selectedWildlife?.id === id) {
+        setIsModalOpen(false);
+      }
+
+      toast.success('Wildlife deleted successfully.');
+    } catch (err) {
+      console.error('Error deleting wildlife:', err);
+      toast.error('Failed to delete wildlife');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Search and Filters */}
@@ -319,6 +350,18 @@ export const WildlifeAdminTab: React.FC<TabProps> = () => {
                           </button>
                         </>
                       )}
+
+                      {item.approval_status === 'approved' && (
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(item.id)}
+                          disabled={processingId === item.id}
+                          className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors disabled:opacity-50"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -416,6 +459,22 @@ export const WildlifeAdminTab: React.FC<TabProps> = () => {
                     className="flex-1 px-4 py-2 rounded-lg font-medium text-white bg-green-600 hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
                     Approve
+                  </button>
+                </div>
+              )}
+
+              {selectedWildlife.approval_status === 'approved' && (
+                <div className="flex gap-3 pt-4 border-t border-[#1A1A1A]/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleDelete(selectedWildlife.id);
+                      setIsModalOpen(false);
+                    }}
+                    disabled={processingId === selectedWildlife.id}
+                    className="flex-1 px-4 py-2 rounded-lg font-medium text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50"
+                  >
+                    Delete
                   </button>
                 </div>
               )}

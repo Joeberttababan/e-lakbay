@@ -4,11 +4,13 @@ import { Users, BarChart3, Calendar, Leaf } from 'lucide-react';
 import { ProfilesTab, AnalyticsTab, EventsTab, WildlifeAdminTab, VisitorAnalyticsDashboard } from '../components/admin';
 
 type TabType = 'profiles' | 'analytics' | 'events' | 'wildlife';
+type AnalyticsSubTab = 'visitor' | 'overview';
 
 const AdminPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabType | null;
   const [activeTab, setActiveTab] = useState<TabType>(tabParam || 'analytics');
+  const [analyticsSubTab, setAnalyticsSubTab] = useState<AnalyticsSubTab>('visitor');
 
   useEffect(() => {
     if (tabParam) {
@@ -76,14 +78,47 @@ const AdminPage: React.FC = () => {
 
         {/* Tab Content */}
         {activeTab === 'analytics' && (
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Visitor Analytics</h2>
-              <VisitorAnalyticsDashboard />
+          <div>
+            {/* Analytics Sub-Tabs */}
+            <div className="mt-6 flex gap-2 border-b border-[#1A1A1A]/10">
+              <button
+                type="button"
+                onClick={() => setAnalyticsSubTab('visitor')}
+                className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+                  analyticsSubTab === 'visitor'
+                    ? 'text-[#1A1A1A] border-b-2 border-[#1A1A1A]'
+                    : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]'
+                }`}
+              >
+                Visitor Analytics
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnalyticsSubTab('overview')}
+                className={`px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+                  analyticsSubTab === 'overview'
+                    ? 'text-[#1A1A1A] border-b-2 border-[#1A1A1A]'
+                    : 'text-[#1A1A1A]/60 hover:text-[#1A1A1A]'
+                }`}
+              >
+                Analytics Overview
+              </button>
             </div>
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>
-              <AnalyticsTab />
+
+            {/* Analytics Content */}
+            <div className="space-y-8">
+              {analyticsSubTab === 'visitor' && (
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold mb-4">Visitor Analytics</h2>
+                  <VisitorAnalyticsDashboard />
+                </div>
+              )}
+              {analyticsSubTab === 'overview' && (
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold mb-4">Analytics Overview</h2>
+                  <AnalyticsTab />
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -6,6 +6,9 @@ export type AdminProfile = {
   battle_cry: string | null;
   municipality_name: string | null;
   created_at: string | null;
+  nationality?: string | null;
+  contact_number?: string | null;
+  gender?: string | null;
 };
 
 export type DateFilter = '7' | '30' | '90' | 'all';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../lib/utils';
 
-export type SearchItemType = 'destination' | 'product' | 'wildlife';
+export type SearchItemType = 'destination' | 'product' | 'wildlife' | 'event';
 
 export interface SearchItemAvatarProps {
   id: string;
@@ -29,7 +29,9 @@ export const SearchItemAvatar: React.FC<SearchItemAvatarProps> = ({
     ? '/placeholder-destination.jpg'
     : type === 'product'
     ? '/placeholder-product.jpg'
-    : '/placeholder-wildlife.jpg';
+    : type === 'wildlife'
+    ? '/placeholder-wildlife.jpg'
+    : '/placeholder-event.jpg';
 
   return (
     <button

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
+import { EventModal } from '../components/EventModal';
 import { toast } from 'sonner';
 import {
   Breadcrumb,
@@ -24,6 +26,8 @@ interface Event {
   category: 'festival' | 'cultural' | 'holiday' | 'other';
   municipality_id: string;
   created_at: string;
+  created_by?: string | null;
+  profiles?: { full_name: string | null; img_url: string | null } | { full_name: string | null; img_url: string | null }[];
   image_urls?: string[];
 }
 
@@ -33,24 +37,48 @@ interface EventsPageProps {
 
 export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const eventIdParam = searchParams.get('id');
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [pinnedEventIds, setPinnedEventIds] = useState<Set<string>>(new Set());
   const [pinningEventId, setPinningEventId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeEvent, setActiveEvent] = useState<any | null>(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
         const { data, error } = await supabase
           .from('events')
-          .select('*,image_urls')
+          .select('*,image_urls,profiles:created_by(full_name,img_url)')
           .order('start_date', { ascending: true });
 
         if (error) {
           console.error('Error fetching events:', error);
         } else {
           setEvents(data || []);
+          // If event ID is in URL, find and set as active
+          if (eventIdParam) {
+            const event = data?.find((e) => e.id === eventIdParam);
+            if (event) {
+              const profile = Array.isArray(event.profiles) ? event.profiles[0] : event.profiles;
+              const eventData = {
+                id: event.id,
+                name: event.title,
+                description: event.description,
+                imageUrl: null,
+                eventDate: new Date(event.start_date).toLocaleDateString(),
+                eventTime: new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                municipality: event.location,
+                barangay: null,
+                createdAt: event.created_at,
+                createdBy: profile?.full_name || 'Municipality',
+                createdByImageUrl: profile?.img_url || null,
+              };
+              setActiveEvent(eventData);
+            }
+          }
         }
       } catch (err) {
         console.error('Error fetching events:', err);
@@ -60,7 +88,7 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
     };
 
     fetchEvents();
-  }, []);
+  }, [eventIdParam]);
 
   // Fetch pinned events for logged-in user
   useEffect(() => {
@@ -273,7 +301,23 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white border border-gray-200 relative"
+                    className="rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow bg-white border border-gray-200 relative cursor-pointer group"
+                    onClick={() => {
+                      const profile = Array.isArray(event.profiles) ? event.profiles[0] : event.profiles;
+                      setActiveEvent({
+                        id: event.id,
+                        name: event.title,
+                        description: event.description,
+                        imageUrl: null,
+                        eventDate: new Date(event.start_date).toLocaleDateString(),
+                        eventTime: new Date(event.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        municipality: event.location,
+                        barangay: null,
+                        createdAt: event.created_at,
+                        createdBy: profile?.full_name || 'Municipality',
+                        createdByImageUrl: profile?.img_url || null,
+                      });
+                    }}
                   >
                     {/* Event Images - Full Width */}
                     {event.image_urls && event.image_urls.length > 0 ? (
@@ -477,6 +521,16 @@ export const EventsPage: React.FC<EventsPageProps> = ({ onBackHome }) => {
           </motion.div>
         </div>
       </motion.section>
+
+      {/* Event Modal */}
+      {activeEvent && (
+        <EventModal
+          open={Boolean(activeEvent)}
+          onClose={() => setActiveEvent(null)}
+          event={activeEvent}
+        />
+      )}
+
       <ScrollToTopButton />
     </main>
   );
