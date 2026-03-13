@@ -19,6 +19,8 @@ import {
 import { TrendingUp, Users, Eye, Globe, Smartphone, Monitor, Clock, GitCompare, Loader, Link, BarChart3, Tablet } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { AnalyticsDashboardSkeleton } from '../ui/Skeletons';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Skeleton } from '../ui/skeleton';
 
 interface MetricCardProps {
   title: string;
@@ -836,40 +838,40 @@ export const VisitorAnalyticsDashboard: React.FC = () => {
         <h2 className="text-lg font-bold text-black mb-4">Recent Visitors</h2>
         <div className="border border-black/10 rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm table-fixed">
-              <thead className="bg-black/5 border-b border-black/10" style={{ zIndex: 1000 }}>
-                <tr>
-                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Timestamp</th>
-                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Page</th>
-                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Browser</th>
-                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">OS</th>
-                  <th className="text-left p-4 font-semibold text-black bg-black/5 w-1/5">Location</th>
-                </tr>
-              </thead>
-              <tbody style={{ zIndex: 0 }}>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-black/5">
+                  <TableHead className="text-black font-semibold">Timestamp</TableHead>
+                  <TableHead className="text-black font-semibold">Page</TableHead>
+                  <TableHead className="text-black font-semibold">Browser</TableHead>
+                  <TableHead className="text-black font-semibold">OS</TableHead>
+                  <TableHead className="text-black font-semibold">Location</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {visitorLogs.length > 0 ? (
                   visitorLogs.slice((visitorLogsPage - 1) * 10, visitorLogsPage * 10).map((log: any, index: number) => (
-                    <tr key={index} className="border-b border-black/5 hover:bg-black/2 transition-colors" style={{ zIndex: 0 }}>
-                      <td className="p-4 text-black/70 w-1/5">{log.timestamp}</td>
-                      <td className="p-4 w-1/5">
+                    <TableRow key={index} className="border-black/5 hover:bg-black/2 transition-colors">
+                      <TableCell className="text-black/70">{log.timestamp}</TableCell>
+                      <TableCell>
                         <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                           {log.page}
                         </span>
-                      </td>
-                      <td className="p-4 text-black/70 w-1/5">{log.browser}</td>
-                      <td className="p-4 text-black/70 w-1/5">{log.os}</td>
-                      <td className="p-4 text-black/70 w-1/5">{log.location}</td>
-                    </tr>
+                      </TableCell>
+                      <TableCell className="text-black/70">{log.browser}</TableCell>
+                      <TableCell className="text-black/70">{log.os}</TableCell>
+                      <TableCell className="text-black/70">{log.location}</TableCell>
+                    </TableRow>
                   ))
                 ) : (
-                  <tr>
-                    <td colSpan={5} className="p-4 text-center text-black/60">
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-black/60 py-8">
                       No visitor data available
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </div>
         {/* Pagination Controls */}

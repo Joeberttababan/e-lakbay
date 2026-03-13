@@ -293,7 +293,7 @@ export const NavBar: React.FC<NavBarProps> = ({
             className="text-left text-sm font-medium tracking-wide transition-colors text-black hover:text-black/70"
             aria-label="View analytics"
           >
-            Analytics
+            Visitor logs
           </button>
           <div className="border-t border-black/10 my-2" />
           {!isAuthenticated ? (
