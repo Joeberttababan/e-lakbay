@@ -10,6 +10,13 @@ import { X, Upload } from 'lucide-react';
 interface WildlifeUploadModalProps {
   open: boolean;
   onClose: () => void;
+  editingWildlife?: {
+    id: string;
+    species_name: string;
+    description: string | null;
+    conservation_status: string | null;
+    image_url: string | null;
+  };
 }
 
 const MAX_IMAGES = 10;
@@ -39,7 +46,7 @@ const uploadImages = async (files: File[], folder: string) => {
   return urls;
 };
 
-export const WildlifeUploadModal: React.FC<WildlifeUploadModalProps> = ({ open, onClose }) => {
+export const WildlifeUploadModal: React.FC<WildlifeUploadModalProps> = ({ open, onClose, editingWildlife }) => {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [speciesName, setSpeciesName] = useState('');
@@ -60,8 +67,15 @@ export const WildlifeUploadModal: React.FC<WildlifeUploadModalProps> = ({ open, 
       setFiles([]);
       setPreviews([]);
       setError(null);
+    } else if (editingWildlife) {
+      setSpeciesName(editingWildlife.species_name);
+      setDescription(editingWildlife.description || '');
+      setConservationStatus(editingWildlife.conservation_status || 'Endangered');
+      setFiles([]);
+      setPreviews(editingWildlife.image_url ? [editingWildlife.image_url] : []);
+      setError(null);
     }
-  }, [open]);
+  }, [open, editingWildlife]);
 
   useEffect(() => {
     const newPreviews: string[] = [];
@@ -100,7 +114,9 @@ export const WildlifeUploadModal: React.FC<WildlifeUploadModalProps> = ({ open, 
       return;
     }
 
-    setError(null);
+    
+
+  const isEditMode = !!editingWildlife;setError(null);
     setFiles([...files, ...newFiles]);
   };
 
@@ -123,7 +139,7 @@ export const WildlifeUploadModal: React.FC<WildlifeUploadModalProps> = ({ open, 
       return;
     }
 
-    if (files.length === 0) {
+    if (!isEditMode && files.length === 0) {
       setError('At least one image is required');
       return;
     }
@@ -131,55 +147,93 @@ export const WildlifeUploadModal: React.FC<WildlifeUploadModalProps> = ({ open, 
     setIsSubmitting(true);
 
     try {
-      // Upload images
-      const imageUrls = await uploadImages(files, `wildlife/${profile?.id}`);
+      let imageUrls = previews.filter(p => !p.startsWith('http') || p.includes('http'));
+      
+      // Upload new images if any
+      if (files.length > 0) {
+        imageUrls = await uploadImages(files, `wildlife/${profile?.id}`);
+      }
 
-      // Insert wildlife record
-      const { data, error: insertError } = await supabase
-        .from('endangered_wildlife')
-        .insert({
-          species_name: speciesName,
-          description,
-          conservation_status: conservationStatus,
-          image_url: imageUrls[0],
-          image_urls: imageUrls,
-          municipality_id: profile?.id,
-          approval_status: 'pending',
+      if (isEditMode && editingWildlife) {
+        // Update existing wildlife
+        const { error: updateError } = await supabase
+          .from('endangered_wildlife')
+          .update({
+            species_name: speciesName,
+            description,
+            conservation_status: conservationStatus,
+            ...(imageUrls.length > 0 && {
+              image_url: imageUrls[0],
+              image_urls: imageUrls,
+            }),
+          })
+          .eq('id', editingWildlife.id);
+
+        if (updateError) throw updateError;
+
+        toast.success('Wildlife updated successfully!');
+        // Invalidate all relevant caches
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['dashboard-wildlife'], exact: false }),
+          queryClient.invalidateQueries({ queryKey: ['wildlife', 'approved'], exact: false }),
+          queryClient.invalidateQueries({ queryKey: ['search-wildlife'], exact: false }),
+          queryClient.invalidateQueries({ queryKey: ['homepage-search-wildlife'], exact: false }),
+        ]);
+      } else {
+        // Insert new wildlife record
+        const { data, error: insertError } = await supabase
+          .from('endangered_wildlife')
+          .insert({
+            species_name: speciesName,
+            description,
+            conservation_status: conservationStatus,
+            image_url: imageUrls[0],
+            image_urls: imageUrls,
+            municipality_id: profile?.id,
+            approval_status: 'pending',
+            created_at: new Date().toISOString(),
+          })
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+
+        // Create notification for admin
+        await supabase.from('notifications').insert({
+          type: 'wildlife_upload',
+          user_id: profile?.id,
+          title: `New Wildlife Upload: ${speciesName}`,
+          message: `${profile?.full_name} uploaded a new endangered species: ${speciesName}`,
+          related_id: data.id,
+          is_read: false,
           created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+        });
 
-      if (insertError) throw insertError;
+        // Create notification for municipality
+        await supabase.from('notifications').insert({
+          type: 'wildlife_submitted',
+          user_id: profile?.id,
+          title: 'Wildlife Upload Submitted',
+          message: `Your wildlife upload "${speciesName}" is pending admin approval.`,
+          related_id: data.id,
+          is_read: false,
+          created_at: new Date().toISOString(),
+        });
 
-      // Create notification for admin
-      await supabase.from('notifications').insert({
-        type: 'wildlife_upload',
-        user_id: profile?.id,
-        title: `New Wildlife Upload: ${speciesName}`,
-        message: `${profile?.full_name} uploaded a new endangered species: ${speciesName}`,
-        related_id: data.id,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      });
+        toast.success('Wildlife uploaded successfully! Awaiting admin approval.');
+        // Invalidate all relevant caches
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['dashboard-wildlife'], exact: false }),
+          queryClient.invalidateQueries({ queryKey: ['wildlife', 'approved'], exact: false }),
+          queryClient.invalidateQueries({ queryKey: ['search-wildlife'], exact: false }),
+          queryClient.invalidateQueries({ queryKey: ['homepage-search-wildlife'], exact: false }),
+        ]);
+      }
 
-      // Create notification for municipality
-      await supabase.from('notifications').insert({
-        type: 'wildlife_submitted',
-        user_id: profile?.id,
-        title: 'Wildlife Upload Submitted',
-        message: `Your wildlife upload "${speciesName}" is pending admin approval.`,
-        related_id: data.id,
-        is_read: false,
-        created_at: new Date().toISOString(),
-      });
-
-      toast.success('Wildlife uploaded successfully! Awaiting admin approval.');
-      queryClient.invalidateQueries({ queryKey: ['wildlife'] });
       onClose();
     } catch (err) {
-      console.error('Error uploading wildlife:', err);
-      setError('Failed to upload wildlife. Please try again.');
+      console.error('Error saving wildlife:', err);
+      setError(`Failed to ${isEditMode ? 'update' : 'upload'} wildlife. Please try again.`);
     } finally {
       setIsSubmitting(false);
     }
@@ -192,7 +246,9 @@ export const WildlifeUploadModal: React.FC<WildlifeUploadModalProps> = ({ open, 
       <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b p-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-black">Upload Endangered Species</h2>
+          <h2 className="text-2xl font-bold text-black">
+            {isEditMode ? 'Edit Endangered Species' : 'Upload Endangered Species'}
+          </h2>
           <button
             type="button"
             onClick={onClose}

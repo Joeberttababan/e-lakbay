@@ -44,7 +44,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
     : {
         initial: { opacity: 0, y: 12 },
         animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.4, ease: 'easeOut', delay: 0.08 },
+        transition: { duration: 0.4, delay: 0.08 },
       };
   const { user } = useAuth();
   const displayName = profile?.full_name || profile?.email || 'Traveler';
@@ -55,6 +55,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
   const [isWildlifeOpen, setIsWildlifeOpen] = useState(false);
   const [activeProduct, setActiveProduct] = useState<ActiveProduct | null>(null);
   const [editingProduct, setEditingProduct] = useState<ActiveProduct | null>(null);
+  const [editingWildlife, setEditingWildlife] = useState<{id: string; species_name: string; description: string | null; conservation_status: string | null; image_url: string | null} | null>(null);
   const sectionRef = useRef<HTMLElement | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
 
@@ -141,7 +142,16 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
               }}
             />
             <DashboardDestinationSection userId={user?.id ?? profile?.id ?? null} />
-            <DashboardWildlifeSection onOpenWildlifeUpload={() => setIsWildlifeOpen(true)} />
+            <DashboardWildlifeSection 
+              onOpenWildlifeUpload={() => {
+                setEditingWildlife(null);
+                setIsWildlifeOpen(true);
+              }}
+              onEditWildlife={(wildlife) => {
+                setEditingWildlife(wildlife);
+                setIsWildlifeOpen(true);
+              }}
+            />
           </div>
         </div>
       </div>
@@ -149,7 +159,14 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ profile }) => {
       <ProductUploadModal open={isProductOpen} onClose={() => setIsProductOpen(false)} />
       <DestinationUploadModal open={isDestinationOpen} onClose={() => setIsDestinationOpen(false)} />
       <EventUploadModal isOpen={isEventOpen} onClose={() => setIsEventOpen(false)} />
-      <WildlifeUploadModal open={isWildlifeOpen} onClose={() => setIsWildlifeOpen(false)} />
+      <WildlifeUploadModal 
+        open={isWildlifeOpen} 
+        onClose={() => {
+          setIsWildlifeOpen(false);
+          setEditingWildlife(null);
+        }}
+        editingWildlife={editingWildlife || undefined}
+      />
       <ProductModal
         open={Boolean(activeProduct)}
         product={activeProduct}

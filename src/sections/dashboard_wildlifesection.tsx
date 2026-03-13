@@ -3,11 +3,12 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
-import { Plus } from 'lucide-react';
+import { Plus, Edit2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DashboardWildlifeSectionProps {
   onOpenWildlifeUpload: () => void;
+  onEditWildlife?: (wildlife: WildlifeItem) => void;
 }
 
 interface WildlifeItem {
@@ -15,11 +16,12 @@ interface WildlifeItem {
   species_name: string;
   description: string | null;
   image_url: string | null;
+  conservation_status: string | null;
   approval_status: 'pending' | 'approved' | 'declined';
   created_at: string;
 }
 
-export const DashboardWildlifeSection: React.FC<DashboardWildlifeSectionProps> = ({ onOpenWildlifeUpload }) => {
+export const DashboardWildlifeSection: React.FC<DashboardWildlifeSectionProps> = ({ onOpenWildlifeUpload, onEditWildlife }) => {
   const shouldReduceMotion = useReducedMotion();
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
@@ -31,7 +33,7 @@ export const DashboardWildlifeSection: React.FC<DashboardWildlifeSectionProps> =
 
       const { data, error } = await supabase
         .from('endangered_wildlife')
-        .select('id, species_name, description, image_url, approval_status, created_at')
+        .select('id, species_name, description, image_url, conservation_status, approval_status, created_at')
         .eq('municipality_id', profile.id)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -65,6 +67,54 @@ export const DashboardWildlifeSection: React.FC<DashboardWildlifeSectionProps> =
       day: 'numeric',
       year: 'numeric',
     });
+  };
+
+  const handleDeleteWildlife = async (wildlifeId: string) => {
+    if (!window.confirm('Are you sure you want to delete this wildlife entry?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('endangered_wildlife')
+        .delete()
+        .eq('id', wildlifeId);
+
+      if (error) throw error;
+
+      // Verify delete succeeded by checking if record still exists
+      const { data: checkData } = await supabase
+        .from('endangered_wildlife')
+        .select('id')
+        .eq('id', wildlifeId)
+        .single();
+
+      if (checkData) {
+        throw new Error('Permission denied: You do not have permission to delete this wildlife entry.');
+      }
+
+      // Invalidate all relevant caches
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['dashboard-wildlife', profile?.id],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['wildlife', 'approved'],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['search-wildlife'],
+          exact: false,
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['homepage-search-wildlife'],
+          exact: false,
+        }),
+      ]);
+      toast.success('Wildlife deleted successfully');
+    } catch (error) {
+      console.error('Error deleting wildlife:', error);
+      toast.error('Failed to delete wildlife');
+    }
   };
 
   return (
@@ -114,6 +164,25 @@ export const DashboardWildlifeSection: React.FC<DashboardWildlifeSectionProps> =
                     {item.approval_status.charAt(0).toUpperCase() + item.approval_status.slice(1)}
                   </span>
                 </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => onEditWildlife?.(item)}
+                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                  title="Edit wildlife"
+                >
+                  <Edit2 className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteWildlife(item.id)}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  title="Delete wildlife"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             </motion.div>
           ))}

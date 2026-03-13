@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../lib/supabaseClient';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Skeleton } from '../ui/skeleton';
@@ -31,6 +32,7 @@ interface TabProps {
 }
 
 export const WildlifeAdminTab: React.FC<TabProps> = () => {
+  const queryClient = useQueryClient();
   const [wildlife, setWildlife] = useState<WildlifeApproval[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -160,6 +162,13 @@ export const WildlifeAdminTab: React.FC<TabProps> = () => {
       );
 
       toast.success('Wildlife approved successfully!');
+      // Invalidate all relevant caches
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['wildlife', 'approved'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['search-wildlife'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['homepage-search-wildlife'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard-wildlife'], exact: false }),
+      ]);
     } catch (err) {
       console.error('Error approving wildlife:', err);
       toast.error('Failed to approve wildlife');
@@ -200,6 +209,13 @@ export const WildlifeAdminTab: React.FC<TabProps> = () => {
       );
 
       toast.success('Wildlife declined.');
+      // Invalidate all relevant caches
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['wildlife', 'approved'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['search-wildlife'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['homepage-search-wildlife'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard-wildlife'], exact: false }),
+      ]);
     } catch (err) {
       console.error('Error declining wildlife:', err);
       toast.error('Failed to decline wildlife');
@@ -222,6 +238,17 @@ export const WildlifeAdminTab: React.FC<TabProps> = () => {
 
       if (deleteError) throw deleteError;
 
+      // Verify delete succeeded by checking if record still exists
+      const { data: checkData } = await supabase
+        .from('endangered_wildlife')
+        .select('id')
+        .eq('id', id)
+        .single();
+
+      if (checkData) {
+        throw new Error('Permission denied: You do not have permission to delete this wildlife entry.');
+      }
+
       // Update local state to remove the deleted wildlife
       setWildlife(wildlife.filter((w) => w.id !== id));
 
@@ -231,6 +258,13 @@ export const WildlifeAdminTab: React.FC<TabProps> = () => {
       }
 
       toast.success('Wildlife deleted successfully.');
+      // Invalidate all relevant caches
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['wildlife', 'approved'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['search-wildlife'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['homepage-search-wildlife'], exact: false }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard-wildlife'], exact: false }),
+      ]);
     } catch (err) {
       console.error('Error deleting wildlife:', err);
       toast.error('Failed to delete wildlife');
