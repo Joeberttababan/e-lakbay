@@ -5,6 +5,7 @@ import { RatingModal } from '../components/RatingModal';
 import { ProductModal } from '../components/ProductModal';
 import { ProductCard } from '../components/ProductCard';
 import { useAuth } from '../components/AuthProvider';
+import { useModal } from '../components/ModalContext';
 import { supabase } from '../lib/supabaseClient';
 import { hasUserRatedProduct } from '../lib/ratingUtils';
 import { toast } from 'sonner';
@@ -41,6 +42,7 @@ export const HomepageProductSection: React.FC<HomepageProductSectionProps> = ({
   onViewProducts,
 }) => {
   const { user, profile } = useAuth();
+  const { openModal } = useModal();
   const queryClient = useQueryClient();
   const [activeProduct, setActiveProduct] = useState<{
     id: string;
@@ -261,7 +263,7 @@ export const HomepageProductSection: React.FC<HomepageProductSectionProps> = ({
         onRate={async () => {
           if (!activeProduct) return;
           if (!user) {
-            toast.error('Please sign in to rate products.');
+            openModal('login');
             return;
           }
           const hasRated = await hasUserRatedProduct(activeProduct.id, user.id);

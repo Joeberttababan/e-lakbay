@@ -6,6 +6,7 @@ import { useLockBodyScroll } from '../lib/useLockBodyScroll';
 import { RatingModal } from '../components/RatingModal';
 import { DestinationCard } from '../components/DestinationCard';
 import { useAuth } from '../components/AuthProvider';
+import { useModal } from '../components/ModalContext';
 import { supabase } from '../lib/supabaseClient';
 import { hasUserRatedDestination } from '../lib/ratingUtils';
 import { toast } from 'sonner';
@@ -42,6 +43,7 @@ export const HomepageTopDestinationsSection: React.FC<HomepageTopDestinationsSec
   onViewProfile,
 }) => {
   const { user, profile } = useAuth();
+  const { openModal } = useModal();
   const queryClient = useQueryClient();
   const [activeDestination, setActiveDestination] = useState<{
     id: string;
@@ -284,7 +286,7 @@ export const HomepageTopDestinationsSection: React.FC<HomepageTopDestinationsSec
               onProfileClick={onViewProfile}
               onRate={async () => {
                 if (!user) {
-                  toast.error('Please sign in to rate destinations.');
+                  openModal('login');
                   return;
                 }
                 const hasRated = await hasUserRatedDestination(activeDestination.id, user.id);

@@ -12,6 +12,7 @@ import { hasUserRatedDestination, hasUserRatedProduct } from '../lib/ratingUtils
 import { toast } from 'sonner';
 import { trackProfileView } from '../lib/analytics';
 import { useAuth } from '../components/AuthProvider';
+import { useModal } from '../components/ModalContext';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -89,6 +90,7 @@ type ActiveProduct = {
 export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome }) => {
   const shouldReduceMotion = useReducedMotion();
   const { user, profile: authProfile } = useAuth();
+  const { openModal } = useModal();
   const queryClient = useQueryClient();
   const [destinationRatingTarget, setDestinationRatingTarget] = useState<{ id: string; name: string } | null>(null);
   const [productRatingTarget, setProductRatingTarget] = useState<{ id: string; name: string } | null>(null);
@@ -355,7 +357,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
                     enableModal
                     onRate={async () => {
                       if (!user) {
-                        toast.error('You must be signed in to rate.');
+                        openModal('login');
                         return;
                       }
                       const hasRated = await hasUserRatedDestination(destination.id, user.id);
@@ -410,7 +412,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
                     }
                     onRate={async () => {
                       if (!user) {
-                        toast.error('You must be signed in to rate.');
+                        openModal('login');
                         return;
                       }
                       const hasRated = await hasUserRatedProduct(product.id, user.id);
@@ -475,7 +477,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ profileId, onBackHome 
         onRate={async () => {
           if (!activeProduct) return;
           if (!user) {
-            toast.error('You must be signed in to rate.');
+            openModal('login');
             return;
           }
           const hasRated = await hasUserRatedProduct(activeProduct.id, user.id);

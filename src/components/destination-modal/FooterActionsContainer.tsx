@@ -26,6 +26,8 @@ export const FooterActionsContainer: React.FC<FooterActionsContainerProps> = ({
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationText, setLocationText] = useState('');
 
+  const [mapLink, setMapLink] = useState<string | null>(null);
+
   useEffect(() => {
     console.log('FooterActionsContainer props:', {
       destination,
@@ -42,51 +44,81 @@ export const FooterActionsContainer: React.FC<FooterActionsContainerProps> = ({
     console.log('Getting current location. Destination:', destination);
     
     try {
-      if (!destination) {
-        const errorMsg = `Destination missing: ${destination === null ? 'null' : 'undefined'}`;
-        console.error(errorMsg);
+      if (!destination && !destinationName) {
         setLocationError('Destination information is not available. Please enter your location manually.');
         setLocationLoading(false);
         return;
       }
 
-      const destLat = destination.lat;
-      const destLng = destination.lng;
-      
-      // Check if coordinates are valid numbers
-      if (destLat === null || destLng === null || typeof destLat !== 'number' || typeof destLng !== 'number') {
-        const errorMsg = `Invalid or missing destination coordinates - Lat: ${destLat}, Lng: ${destLng}`;
-        console.warn(errorMsg);
-        setLocationError('Destination coordinates are not available. Please enter your location manually and try again.');
-        setLocationLoading(false);
-        return;
-      }
-
+      // Get user's current location first
       const userLocation = await getUserLocation();
       console.log('User location obtained:', userLocation);
       
-      const directionsLink = getDirectionsLink(
-        userLocation.lat,
-        userLocation.lng,
-        destLat,
-        destLng,
-        destinationName
-      );
+      let directionsLink = '';
+      const destLat = destination?.lat;
+      const destLng = destination?.lng;
+      
+      // If we have valid destination coordinates, use them
+      if (destLat !== null && destLng !== null && typeof destLat === 'number' && typeof destLng === 'number') {
+        directionsLink = getDirectionsLink(
+          userLocation.lat,
+          userLocation.lng,
+          destLat,
+          destLng,
+          destinationName
+        );
+        console.log('Opening directions link with coordinates:', directionsLink);
+      } else {
+        // Fallback to destination name or address if coordinates aren't available
+        const destinationAddress = destination?.address || 
+                                  [destination?.barangay, destination?.municipality]
+                                    .filter(Boolean)
+                                    .join(', ') || 
+                                  destinationName;
+        
+        if (!destinationAddress) {
+          setLocationError('Destination name/address not available. Please enter your location manually and try again.');
+          setLocationLoading(false);
+          return;
+        }
 
-      console.log('Opening directions link:', directionsLink);
+        // Create a directions link using place names
+        directionsLink = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${encodeURIComponent(destinationAddress)}`;
+        console.log('Opening directions link with place name:', directionsLink);
+      }
       
       const mapWindow = window.open(directionsLink, '_blank', 'noopener,noreferrer');
       
       if (!mapWindow) {
-        setLocationError('Pop-up blocked. Please check your browser settings.');
-        setLocationLoading(false);
+        // Pop-up was blocked, store the link so user can click it
+        console.warn('Pop-up blocked by browser. Storing link for user to click.');
+        setMapLink(directionsLink);
+        setLocationError('');
         return;
       }
 
       setShowLocationModal(false);
       setLocationError(null);
+      setMapLink(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to get your location.';
+      let message = 'Failed to get your location.';
+      
+      if (error instanceof GeolocationPositionError) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            message = 'Location access denied. Please enable location permissions in your browser settings and try again.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            message = 'Your location is currently unavailable. Please try again or enter your location manually.';
+            break;
+          case error.TIMEOUT:
+            message = 'Location request timed out. Please try again or enter your location manually.';
+            break;
+        }
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+      
       console.error('Location error:', message, error);
       setLocationError(message);
     } finally {
@@ -231,9 +263,9 @@ export const FooterActionsContainer: React.FC<FooterActionsContainerProps> = ({
             {destination && (
               <div className="mb-4 p-3 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-700 text-xs">
                 {destination.lat !== null && destination.lng !== null ? (
-                  <p>✓ Destination coordinates available. Enter your location below.</p>
+                  <p>✓ Destination coordinates available for accurate directions.</p>
                 ) : (
-                  <p>⚠ Exact destination coordinates not available, but you can still get directions to "{destinationName}"</p>
+                  <p>ℹ️ Getting directions using destination location information.</p>
                 )}
               </div>
             )}
@@ -243,8 +275,7 @@ export const FooterActionsContainer: React.FC<FooterActionsContainerProps> = ({
               <button
                 type="button"
                 onClick={handleGetCurrentLocation}
-                disabled={locationLoading || !destination || destination.lat === null || destination.lng === null}
-                title={!destination || destination.lat === null || destination.lng === null ? 'Destination coordinates not available' : ''}
+                disabled={locationLoading}
                 className="w-full py-3 px-4 rounded-xl bg-blue-600/80 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors flex items-center justify-center gap-2"
               >
                 {locationLoading ? (
@@ -262,8 +293,23 @@ export const FooterActionsContainer: React.FC<FooterActionsContainerProps> = ({
                 )}
               </button>
 
-              {/* Or Divider - only show if current location button is available */}
-              {destination && destination.lat !== null && destination.lng !== null && (
+              {/* Show clickable link if pop-up was blocked */}
+              {mapLink && (
+                <div className="p-3 rounded-lg bg-yellow-500/20 border border-yellow-500/30">
+                  <p className="text-xs text-yellow-700 mb-2">Pop-up blocked. Click the link below to open directions:</p>
+                  <a
+                    href={mapLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block w-full py-2 px-3 rounded-lg bg-blue-600/80 hover:bg-blue-700 text-white text-sm font-medium text-center transition-colors"
+                  >
+                    Open Directions Link
+                  </a>
+                </div>
+              )}
+
+              {/* Or Divider - only show if no map link is displayed */}
+              {!mapLink && (
                 <div className="relative flex items-center gap-3 my-2">
                   <div className="flex-1 h-px bg-white/20" />
                   <span className="text-xs text-black/50">or</span>
@@ -271,28 +317,30 @@ export const FooterActionsContainer: React.FC<FooterActionsContainerProps> = ({
                 </div>
               )}
 
-              {/* Location Search */}
-              <div className="space-y-2">
-                <label className="text-xs text-black/70 font-medium">Enter Your Location</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Vigan City, San Jacinto, or an address"
-                  value={locationText}
-                  onChange={(e) => {
-                    setLocationText(e.target.value);
-                    if (locationError) setLocationError(null);
-                  }}
-                  onKeyPress={(e) => e.key === 'Enter' && handleLocationSearch()}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                />
-                <button
-                  type="button"
-                  onClick={handleLocationSearch}
-                  className="w-full py-2 px-4 rounded-lg bg-green-600/80 hover:bg-green-700 text-white text-sm font-medium transition-colors"
-                >
-                  Get Directions
-                </button>
-              </div>
+              {/* Location Search - only show if no map link is displayed */}
+              {!mapLink && (
+                <div className="space-y-2">
+                  <label className="text-xs text-black/70 font-medium">Enter Your Location</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Vigan City, San Jacinto, or an address"
+                    value={locationText}
+                    onChange={(e) => {
+                      setLocationText(e.target.value);
+                      if (locationError) setLocationError(null);
+                    }}
+                    onKeyPress={(e) => e.key === 'Enter' && handleLocationSearch()}
+                    className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleLocationSearch}
+                    className="w-full py-2 px-4 rounded-lg bg-green-600/80 hover:bg-green-700 text-white text-sm font-medium transition-colors"
+                  >
+                    Get Directions
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Close Button */}

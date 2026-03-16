@@ -13,6 +13,7 @@ import { ScrollToTopButton } from '../components/ScrollToTopButton';
 import { DestinationTileSkeleton, ProductCardSkeleton } from '../components/ui/Skeletons';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../components/AuthProvider';
+import { useModal } from '../components/ModalContext';
 import { trackSearchPerformed, trackContentView } from '../lib/analytics';
 import {
   Breadcrumb,
@@ -133,6 +134,7 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
   const queryParam = searchParams.get('q') ?? '';
   const typeParam = (searchParams.get('type') ?? 'all') as FilterType;
   const { user, profile } = useAuth();
+  const { openModal } = useModal();
 
   const shouldReduceMotion = useReducedMotion();
   const getItemMotion = (index: number) =>
@@ -804,7 +806,13 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
                         showDescription
                         showMeta
                         enableModal
-                        onRate={() => setRatingTarget({ id: dest.id, name: dest.name, type: 'destination' })}
+                        onRate={() => {
+                          if (!user) {
+                            openModal('login');
+                            return;
+                          }
+                          setRatingTarget({ id: dest.id, name: dest.name, type: 'destination' });
+                        }}
                         onProfileClick={onViewProfile}
                       />
                     </motion.div>
@@ -859,7 +867,13 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
                           uploaderId: prod.uploaderId,
                           location: prod.location,
                         })}
-                        onRate={() => setRatingTarget({ id: prod.id, name: prod.name, type: 'product' })}
+                        onRate={() => {
+                          if (!user) {
+                            openModal('login');
+                            return;
+                          }
+                          setRatingTarget({ id: prod.id, name: prod.name, type: 'product' });
+                        }}
                         onProfileClick={onViewProfile}
                       />
                     </motion.div>
@@ -977,6 +991,10 @@ export const SearchResultsPage: React.FC<SearchResultsPageProps> = ({ onBackHome
             location: activeProduct.location,
           }}
           onRate={() => {
+            if (!user) {
+              openModal('login');
+              return;
+            }
             if (activeProduct) {
               setRatingTarget({ id: activeProduct.id, name: activeProduct.name, type: 'product' });
             }

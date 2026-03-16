@@ -8,6 +8,8 @@ import { ProductModal } from '../components/ProductModal';
 import { RatingModal } from '../components/RatingModal';
 import { SearchSuggest } from '../components/SearchSuggest';
 import { ScrollToTopButton } from '../components/ScrollToTopButton';
+import { useAuth } from '../components/AuthProvider';
+import { useModal } from '../components/ModalContext';
 import { supabase } from '../lib/supabaseClient';
 import { hasUserRatedProduct } from '../lib/ratingUtils';
 import { toast } from 'sonner';
@@ -19,7 +21,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '../components/modern-ui/breadcrumb';
-import { useAuth } from '../components/AuthProvider';
 import { trackContentView, trackFilterUsage, trackSearchPerformed } from '../lib/analytics';
 
 interface ProductsPageProps {
@@ -79,6 +80,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
           transition: { duration: 0.35, ease: 'easeOut', delay: index * 0.04 },
         };
   const { user, profile } = useAuth();
+  const { openModal } = useModal();
   const queryClient = useQueryClient();
   const location = useLocation();
   const [ratingTarget, setRatingTarget] = useState<{ id: string; name: string } | null>(null);
@@ -327,7 +329,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
                     }}
                     onRate={async () => {
                       if (!user) {
-                        toast.error('Please sign in to rate products.');
+                        openModal('login');
                         return;
                       }
                       const hasRated = await hasUserRatedProduct(product.id, user.id);
@@ -350,7 +352,7 @@ export const ProductsPage: React.FC<ProductsPageProps> = ({ onBackHome, onViewPr
         onRate={async () => {
           if (!activeProduct) return;
           if (!user) {
-            toast.error('Please sign in to rate products.');
+            openModal('login');
             return;
           }
           const hasRated = await hasUserRatedProduct(activeProduct.id, user.id);
