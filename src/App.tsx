@@ -4,6 +4,7 @@ import { NavBar } from './components/NavBar';
 import { ModalProvider } from './components/ModalContext';
 import { GlobalModal } from './components/GlobalModal';
 import { AuthProvider, useAuth } from './components/AuthProvider';
+import { ChangePasswordModal } from './components/ChangePasswordModal';
 import { DashboardPage } from './pages/DashboardPage';
 import { HomePage } from './pages/HomePage';
 import { DestinationsPage } from './pages/DestinationsPage';
@@ -11,6 +12,8 @@ import { ProductsPage } from './pages/ProductsPage';
 import { SearchResultsPage } from './pages/SearchResultsPage';
 import { EventsPage } from './pages/EventsPage';
 import { WildlifePage } from './pages/WildlifePage';
+import { TermsAndPrivacyPage } from './pages/TermsAndPrivacyPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import AnalyticsPage from './pages/AnalyticsPage';
@@ -109,6 +112,7 @@ const AppContent: React.FC = () => {
   const [active, setActive] = useState<'login' | 'signup'>('login');
   const { user, profile, loading, signOut } = useAuth();
   const [isComingSoonOpen, setIsComingSoonOpen] = useState(false);
+  const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
@@ -116,6 +120,17 @@ const AppContent: React.FC = () => {
 
   // Initialize analytics tracking for real-time visitor analytics
   useAnalytics({ uid: user?.id });
+
+  // Check for recovery token in URL and show password change modal
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const hash = window.location.hash;
+    if (hash.includes('type=recovery') && hash.includes('access_token')) {
+      // Recovery link detected, show password change modal
+      setShowPasswordChangeModal(true);
+    }
+  }, []);
 
   // Get the dashboard route based on user role
   const getDashboardRoute = useCallback((role: string | null | undefined): string => {
@@ -132,6 +147,9 @@ const AppContent: React.FC = () => {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (loading || !user || !profile) return;
+
+    // Don't redirect if user is on password reset page
+    if (location.pathname === '/reset-password') return;
 
     const shouldRedirect = window.sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY) === '1';
     if (!shouldRedirect) return;
@@ -202,7 +220,7 @@ const AppContent: React.FC = () => {
   return (
     <ModalProvider>
       <div className="min-h-screen flex flex-col">
-        <div className="relative">
+        {location.pathname !== '/reset-password' && (
           <NavBar
             active={active}
             onActiveChange={setActive}
@@ -214,6 +232,8 @@ const AppContent: React.FC = () => {
             onJumpToSection={handleJumpToSection}
             onNavigateEvents={() => navigate('/events')}
           />
+        )}
+        <div className="relative">
           <Routes>
             <Route
               path="/"
@@ -270,6 +290,14 @@ const AppContent: React.FC = () => {
               }
             />
             <Route
+              path="/terms-and-privacy"
+              element={<TermsAndPrivacyPage />}
+            />
+            <Route
+              path="/reset-password"
+              element={<ResetPasswordPage />}
+            />
+            <Route
               path="/profile/:profileId"
               element={<ProfileRoute onBackHome={() => navigate('/')} />}
             />
@@ -286,13 +314,16 @@ const AppContent: React.FC = () => {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </div>
-        {location.pathname !== '/dashboard' && location.pathname !== '/admin' && location.pathname !== '/tourist-dashboard' && location.pathname !== '/analytics' && <Footer onOpenComingSoon={() => setIsComingSoonOpen(true)} />}
+        {location.pathname !== '/dashboard' && location.pathname !== '/admin' && location.pathname !== '/tourist-dashboard' && location.pathname !== '/analytics' && location.pathname !== '/reset-password' && <Footer onOpenComingSoon={() => setIsComingSoonOpen(true)} />}
         <GlobalModal onModeChange={setActive} />
       </div>
       <SonnerGlobal />
       <ScrollToTopButton />
       {isComingSoonOpen && (
         <ComingSoonModal isOpen={isComingSoonOpen} onClose={() => setIsComingSoonOpen(false)} />
+      )}
+      {showPasswordChangeModal && (
+        <ChangePasswordModal isOpen={showPasswordChangeModal} onClose={() => setShowPasswordChangeModal(false)} />
       )}
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">

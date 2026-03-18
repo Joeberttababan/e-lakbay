@@ -1,4 +1,5 @@
 import { Facebook, Instagram, X, Github, Youtube } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import logoWhite from '../assets/E-lakbay_Logo.svg';
 
 interface FooterProps {
@@ -24,6 +25,15 @@ const socials = [
 ];
 
 export default function Footer({ onOpenComingSoon }: FooterProps) {
+  const navigate = useNavigate();
+
+  const handleNavClick = (label: string) => {
+    if (label === "Terms of Service" || label === "Privacy Policy") {
+      navigate("/terms-and-privacy");
+    } else {
+      onOpenComingSoon?.();
+    }
+  };
 
   return (
     <footer className="glass-card text-black border-t border-[#E0E0E0] p-4 md:px-8">
@@ -46,7 +56,7 @@ export default function Footer({ onOpenComingSoon }: FooterProps) {
         {navLinks.map((link) => (
         <button
             key={link.label}
-            onClick={onOpenComingSoon}
+            onClick={() => handleNavClick(link.label)}
             className="text-sm text-black/70 hover:text-[#0D9488] transition-colors duration-200 whitespace-nowrap text-underline-offset-5 hover:underline"
         >
             {link.label}

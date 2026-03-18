@@ -3,6 +3,8 @@ import { useLockBodyScroll } from '../lib/useLockBodyScroll';
 import { useModal } from './ModalContext';
 import { Button } from './modern-ui/button';
 import { useAuth } from './AuthProvider';
+import { TermsAndConditionsModal } from './TermsAndConditionsModal';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 import {
   type AuthFormState,
   type AuthMode,
@@ -23,6 +25,7 @@ const initialFormState: AuthFormState = {
   nationality: '',
   contactNumber: '',
   gender: '',
+  acceptedTerms: false,
 };
 
 export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
@@ -37,10 +40,20 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [showOtpVerification, setShowOtpVerification] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [userEmailForOtp, setUserEmailForOtp] = useState('');
   useEffect(() => {
     setFormState(initialFormState);
     setFormError(null);
     setIsSubmitting(false);
+    setShowOtpVerification(false);
+    setOtp('');
+    setOtpError(null);
   }, [type]);
 
   const isSignup = type === 'signup';
@@ -51,8 +64,8 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
     [isSignup]
   );
 
-  const handleChange = (key: keyof AuthFormState) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = key === 'remember' ? event.target.checked : event.target.value;
+  const handleChange = (key: keyof AuthFormState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const value = key === 'remember' || key === 'acceptedTerms' ? (event.target as HTMLInputElement).checked : event.target.value;
     setFormState((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -70,28 +83,87 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
     setFormError(null);
     setIsSubmitting(true);
     try {
-      const errorMessage = isSignup
-        ? await signUp(
-            formState.email,
-            formState.password,
-            formState.fullName,
-            formState.nationality,
-            formState.contactNumber,
-            formState.gender
-          )
-        : await signIn(formState.email, formState.password);
+      if (isSignup) {
+        const errorMessage = await signUp(
+          formState.email,
+          formState.password,
+          formState.fullName,
+          formState.nationality,
+          formState.contactNumber,
+          formState.gender
+        );
+        
+        if (errorMessage) {
+          setFormError(errorMessage);
+          setIsSubmitting(false);
+          return;
+        }
 
-      if (errorMessage) {
-        setFormError(errorMessage);
-        return;
+        // Show OTP verification screen after successful sign-up
+        setUserEmailForOtp(formState.email);
+        setShowOtpVerification(true);
+        setIsSubmitting(false);
+      } else {
+        const errorMessage = await signIn(formState.email, formState.password);
+
+        if (errorMessage) {
+          setFormError(errorMessage);
+          setIsSubmitting(false);
+          return;
+        }
+
+        closeModal();
+        setIsSubmitting(false);
       }
-
-      closeModal();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong. Please try again.';
       setFormError(message);
-    } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleOtpVerify = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setOtpError(null);
+
+    if (!otp.trim()) {
+      setOtpError('Please enter the OTP');
+      return;
+    }
+
+    if (otp.length !== 6 || !/^\d+$/.test(otp)) {
+      setOtpError('OTP must be 6 digits');
+      return;
+    }
+
+    if (isVerifyingOtp) return;
+
+    setIsVerifyingOtp(true);
+
+    try {
+      const { supabase } = await import('../lib/supabaseClient');
+      
+      // Verify OTP token (Supabase sends OTP via email after sign-up)
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        email: userEmailForOtp,
+        token: otp,
+        type: 'signup',
+      });
+
+      if (verifyError) {
+        setOtpError(verifyError.message);
+        return;
+      }
+
+      // OTP verified successfully
+      closeModal();
+      setShowOtpVerification(false);
+      setOtp('');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
+      setOtpError(message);
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
@@ -139,13 +211,72 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
         >
           ×
         </button>
-        <h2 className="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2 text-center text-black" id="auth-modal-title">
-          {isSignup ? 'Create your account' : 'Welcome back'}
-        </h2>
-        <p className="text-xs sm:text-sm text-black/60 mb-4 sm:mb-6 text-center">
-          {isSignup ? 'Start planning your next journey in minutes.' : 'Sign in to continue exploring.'}
-        </p>
-        <form className="flex flex-col gap-3 sm:gap-4" onSubmit={handleSubmit}>
+
+        {showOtpVerification ? (
+          <>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2 text-center text-black" id="auth-modal-title">
+              Verify your email
+            </h2>
+            <p className="text-xs sm:text-sm text-black/60 mb-6 sm:mb-6 text-center">
+              We've sent a verification code to <span className="font-semibold">{userEmailForOtp}</span>
+            </p>
+
+            <form className="flex flex-col gap-4" onSubmit={handleOtpVerify}>
+              <div>
+                <label className="text-xs sm:text-sm font-semibold text-black/70 mb-2 block">
+                  Enter 6-digit code
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="000000"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="w-full rounded px-4 py-3 bg-white border border-white/20 text-sm text-black placeholder:text-black/50 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center tracking-widest font-mono text-2xl"
+                  disabled={isVerifyingOtp}
+                  maxLength={6}
+                  required
+                />
+              </div>
+
+              {otpError && (
+                <div className="text-xs sm:text-sm text-black bg-red-50 border border-red-200 rounded px-3 py-2">
+                  {otpError}
+                </div>
+              )}
+
+              <Button
+                className="w-full rounded-full mt-2 bg-hero-gradient text-white hover:brightness-110 text-sm sm:text-base py-2 sm:py-3"
+                variant="default"
+                type="submit"
+                loading={isVerifyingOtp}
+                disabled={isVerifyingOtp || otp.length !== 6}
+              >
+                {isVerifyingOtp ? 'Verifying...' : 'Verify Code'}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOtpVerification(false);
+                  setOtp('');
+                  setOtpError(null);
+                }}
+                className="text-xs sm:text-sm text-black/70 hover:text-black transition-colors mt-2 text-center"
+              >
+                Back to sign up
+              </button>
+            </form>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl sm:text-2xl font-semibold mb-1 sm:mb-2 text-center text-black" id="auth-modal-title">
+              {isSignup ? 'Create your account' : 'Welcome back'}
+            </h2>
+            <p className="text-xs sm:text-sm text-black/60 mb-4 sm:mb-6 text-center">
+              {isSignup ? 'Start planning your next journey in minutes.' : 'Sign in to continue exploring.'}
+            </p>
+            <form className="flex flex-col gap-3 sm:gap-4" onSubmit={handleSubmit}>
           {!isSignup && (
             <Button
               type="button"
@@ -322,14 +453,46 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
             </div>
           )}
           {!isSignup && (
-            <label className="flex items-center gap-2 text-xs sm:text-sm text-black/60">
+            <div className="flex items-center justify-between gap-3">
+              <label className="flex items-center gap-2 text-xs sm:text-sm text-black/60">
+                <input
+                  type="checkbox"
+                  checked={formState.remember}
+                  onChange={handleChange('remember')}
+                  className="h-4 w-4 rounded border-black/40 bg-black/5 cursor-pointer"
+                />
+                Remember me
+              </label>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowForgotPasswordModal(true);
+                }}
+                className="text-xs sm:text-sm text-black/70 hover:text-black underline transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+          {isSignup && (
+            <label className="flex items-start gap-2 text-xs sm:text-sm text-black/70">
               <input
                 type="checkbox"
-                checked={formState.remember}
-                onChange={handleChange('remember')}
-                className="h-4 w-4 rounded border-black/40 bg-black/5 cursor-pointer"
+                checked={formState.acceptedTerms || false}
+                onChange={handleChange('acceptedTerms')}
+                className="h-4 w-4 rounded border-black/40 bg-black/5 cursor-pointer mt-0.5 flex-shrink-0"
               />
-              Remember me
+              <span className="leading-relaxed">
+                I agree to the{' '}
+                <button
+                  type="button"
+                  onClick={() => setShowTermsModal(true)}
+                  className="font-semibold text-black hover:opacity-70 transition-opacity underline decoration-dashed"
+                >
+                  Terms and Conditions
+                </button>
+              </span>
             </label>
           )}
           {formError && (
@@ -359,7 +522,15 @@ export const GlobalModal: React.FC<GlobalModalProps> = ({ onModeChange }) => {
             {switchLabel}
           </button>
         </div>
+          </>
+        )}
       </div>
+      <TermsAndConditionsModal isOpen={showTermsModal} onClose={() => setShowTermsModal(false)} />
+      <ForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+        onBackToLogin={() => setShowForgotPasswordModal(false)}
+      />
     </div>
   );
 };

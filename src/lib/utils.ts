@@ -13,6 +13,7 @@ export interface AuthFormState {
   nationality?: string;
   contactNumber?: string;
   gender?: string;
+  acceptedTerms?: boolean;
 }
 
 const EMAIL_REGEX = /\S+@\S+\.\S+/;
@@ -52,6 +53,7 @@ export const validateAuthForm = (mode: AuthMode, form: AuthFormState): string | 
     if (!form.nationality?.trim()) return "Nationality is required.";
     if (!form.contactNumber?.trim()) return "Contact number is required.";
     if (!form.gender?.trim()) return "Gender is required.";
+    if (!form.acceptedTerms) return "You must accept the Terms and Conditions to continue.";
     
     const passwordValidation = validatePasswordStrength(form.password);
     if (!passwordValidation.valid) {
